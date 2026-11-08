@@ -1,0 +1,23 @@
+{
+  "name": "Prolific Newsroom Cockpit | Editorial Publishing",
+  "short_name": "Prolific Admin",
+  "description": "Editorial command dashboard, breaking news alerts, and AI copilot.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#001A2C",
+  "theme_color": "#002B49",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

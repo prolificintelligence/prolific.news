@@ -1,0 +1,11 @@
+{
+  email admin@prolific.news
+}
+
+ws.prolific.news {
+  reverse_proxy gateway:8080
+}
+
+search.prolific.news {
+  reverse_proxy meilisearch:7700
+}

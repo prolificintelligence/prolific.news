@@ -1,0 +1,55 @@
+{
+  "name": "Prolific News Network | 24/7 Digital & Broadcast News",
+  "short_name": "Prolific News Network",
+  "description": "24/7 breaking news, live broadcast video streaming, financial market tickers, and investigative reporting.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#001A2C",
+  "theme_color": "#002B49",
+  "categories": ["news", "magazines", "business", "entertainment"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Watch Live",
+      "short_name": "Live",
+      "description": "Watch 24/7 Prolific Live Broadcast",
+      "url": "/watch",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Live Coverage",
+      "short_name": "Live Blog",
+      "description": "Continuous real-time election & breaking news",
+      "url": "/live/presidential-election-briefing",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Prolific Plus",
+      "short_name": "Plus",
+      "description": "Exclusive documentaries and ad-free experience",
+      "url": "/plus",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

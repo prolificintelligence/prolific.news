@@ -1,0 +1,21 @@
+{
+  "name": "@prolific/db",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@prolific/types": "workspace:*",
+    "@neondatabase/serverless": "^0.10.4",
+    "drizzle-orm": "^0.39.3"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30.4",
+    "typescript": "^5.8.0"
+  }
+}

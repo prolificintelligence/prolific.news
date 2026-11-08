@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - gateway
+      - meilisearch
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    restart: unless-stopped
+    environment:
+      - MEILI_ENV=production
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY:-prolific_secure_meili_master_key_2026}
+      - MEILI_NO_ANALYTICS=true
+    volumes:
+      - meili_data:/meili_data
+    ports:
+      - "127.0.0.1:7700:7700"
+
+  gateway:
+    build: .
+    restart: unless-stopped
+    environment:
+      - PORT=8080
+      - REDIS_URL=redis://redis:6379
+      - MEILI_HOST=http://meilisearch:7700
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY:-prolific_secure_meili_master_key_2026}
+    depends_on:
+      - redis
+      - meilisearch
+    ports:
+      - "127.0.0.1:8080:8080"
+
+volumes:
+  redis_data:
+  meili_data:
+  caddy_data:
+  caddy_config:

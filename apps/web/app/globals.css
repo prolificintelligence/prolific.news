@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-headline: 'Oswald', 'Roboto Condensed', sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: 'Merriweather', Georgia, serif;
+  }
+
+  body {
+    background-color: #FFFFFF;
+    color: #111827;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom scrollbar hiding for horizontal tickers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Continuous Left-to-Right Market Marquee Animation */
+@keyframes ticker-ltr {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0%, 0, 0);
+  }
+}
+
+.animate-ticker-ltr {
+  display: flex;
+  width: max-content;
+  animation: ticker-ltr 40s linear infinite;
+  will-change: transform;
+}
+
+.animate-ticker-ltr:hover {
+  animation-play-state: paused;
+}
+

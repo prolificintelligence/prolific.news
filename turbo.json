@@ -1,0 +1,26 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalPassThroughEnv": [
+    "DATABASE_URL", "INNGEST_SIGNING_KEY", "INNGEST_EVENT_KEY", "REVALIDATION_SECRET",
+    "NEON_AUTH_BASE_URL", "NEON_AUTH_COOKIE_SECRET", "ADMIN_ALLOWED_EMAILS",
+    "PROLIFIC_KNOWLEDGE_READER_KEY", "PROLIFIC_KNOWLEDGE_WRITER_KEY", "NEXT_PUBLIC_WEB_URL"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
