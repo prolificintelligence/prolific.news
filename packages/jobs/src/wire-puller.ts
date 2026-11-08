@@ -53,6 +53,21 @@ const CATEGORY_IMAGES: Record<string, string[]> = {
     'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
   ],
+  Africa: [
+    'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?auto=format&fit=crop&w=1200&q=80',
+  ],
+  Asia: [
+    'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1535139262971-c51845709a48?auto=format&fit=crop&w=1200&q=80',
+  ],
+  LatAm: [
+    'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1518638150340-f706e86654de?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1589553416260-f586c8f1514f?auto=format&fit=crop&w=1200&q=80',
+  ],
   General: [
     'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80',
   ],
@@ -76,9 +91,6 @@ function calculateTimeAgo(dateStr: string): string {
   }
 }
 
-/**
- * Decode HTML entities and thoroughly strip ALL HTML tags, style, script, and link elements
- */
 export function decodeHtmlEntities(raw: string): string {
   if (!raw) return '';
   return raw
@@ -104,9 +116,6 @@ export function stripHtml(raw: string): string {
     .trim();
 }
 
-/**
- * Separate clean headline from source suffix (e.g., "Headline - BBC" -> { title: "Headline", source: "BBC" })
- */
 export function cleanHeadline(rawTitle: string, fallbackSource: string = 'Wire Services'): {
   title: string;
   source: string;
@@ -121,118 +130,144 @@ export function cleanHeadline(rawTitle: string, fallbackSource: string = 'Wire S
   return { title: clean, source: fallbackSource };
 }
 
-/**
- * Clean or generate an authoritative journalistic subtitle / summary.
- * Avoids Google News <ol><li> lists of duplicate headlines.
- */
 export function cleanOrGenerateSummary(
   rawDesc: string,
   headline: string,
   source: string,
   category: string
 ): string {
-  if (
-    rawDesc.includes('<ol') ||
-    rawDesc.includes('&lt;ol') ||
-    rawDesc.includes('<li>') ||
-    rawDesc.includes('&lt;li') ||
-    rawDesc.includes('href="https://news.google')
-  ) {
-    return `Developing report via ${source}: ${headline}. International and domestic agencies are assessing immediate developments across ${category.toLowerCase()} sectors.`;
-  }
-
   const clean = stripHtml(rawDesc);
-  if (clean.length > 25 && !clean.includes('http') && !clean.includes('target="_blank"')) {
-    return clean;
+  const isGoogleNewsList =
+    clean.includes('&nbsp;') ||
+    clean.toLowerCase().includes('view full coverage') ||
+    clean.length < 25 ||
+    (clean.match(/ - /g) || []).length >= 2;
+
+  if (!isGoogleNewsList && clean.length >= 35) {
+    const sentences = clean.split(/(?<=[.!?])\s+/);
+    if (sentences.length > 0 && sentences[0].length >= 30) {
+      return sentences.slice(0, 2).join(' ').trim();
+    }
+    return clean.slice(0, 240).trim() + '...';
   }
 
-  return `Developing report via ${source}: ${headline}. International and domestic agencies are assessing immediate developments across ${category.toLowerCase()} sectors.`;
+  const categoryContexts: Record<string, string> = {
+    Politics: 'Fast-moving legislative and executive policy developments continue to unfold.',
+    US: 'Law enforcement, municipal, and state authorities are responding to newly confirmed reports.',
+    Business: 'Financial markets and global commercial institutions are pricing in significant new developments.',
+    World: 'Diplomatic envoys and international observers are closely monitoring fast-moving border developments.',
+    Tech: 'Industry leaders and regulatory analysts are assessing newly disclosed architectural updates.',
+    Sports: 'Franchise representatives and sports analysts are breaking down game-changing performance metrics.',
+    Entertainment: 'Studio executives, artists, and media critics are reviewing major cultural announcements.',
+    Opinion: 'Leading policy scholars and editorial columnists provide nuanced analysis of the situation.',
+    Lifestyle: 'Trends across modern travel, architecture, luxury design, and wellness continue to evolve.',
+    Africa: 'Economic corridors, continental trade, and regional leadership conferences report fast-moving developments.',
+    Asia: 'Supply chain monitors and Asia-Pacific financial hubs are assessing major regional policy shifts.',
+    LatAm: 'Resource partnerships, macroeconomic updates, and diplomatic talks advance across South and Central America.',
+    General: 'Verified dispatches indicate significant breaking events now developing across key sectors.',
+  };
+
+  const context = categoryContexts[category] || categoryContexts.General;
+  return `${context} Detailed investigation is underway with live updates via Prolific News Network correspondents.`;
 }
 
-function slugify(title: string, hash: string): string {
+export function extractMediaUrl(block: string): string {
+  const imgMatch = block.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (imgMatch && imgMatch[1]) return imgMatch[1];
+
+  const enclosureMatch = block.match(/<enclosure[^>]+url=["']([^"']+)["'][^>]*type=["']image\/[^"']+["']/i);
+  if (enclosureMatch && enclosureMatch[1]) return enclosureMatch[1];
+
+  const mediaContentMatch = block.match(/<media:content[^>]+url=["']([^"']+)["']/i);
+  if (mediaContentMatch && mediaContentMatch[1]) return mediaContentMatch[1];
+
+  const mediaThumbMatch = block.match(/<media:thumbnail[^>]+url=["']([^"']+)["']/i);
+  if (mediaThumbMatch && mediaThumbMatch[1]) return mediaThumbMatch[1];
+
+  return '';
+}
+
+export function slugify(title: string, idSuffix?: string): string {
   const base = title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-    .slice(0, 50);
-  return `${base}-${hash.slice(0, 8)}`;
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .slice(0, 60)
+    .replace(/-+$/, '');
+  const suffix = idSuffix || crypto.randomBytes(3).toString('hex');
+  return `${base || 'news-dispatch'}-${suffix}`;
 }
 
-/**
- * Extract best available media URL from feed block
- */
-function extractMediaUrl(itemBlock: string, category: string, index: number): string {
-  // 1. Check <media:content url="...">
-  const mediaContent = itemBlock.match(/<media:content[^>]+url="([^"]+)"/i);
-  if (mediaContent && mediaContent[1]) {
-    return mediaContent[1].replace(/&amp;/g, '&');
+export function computeValueScore(
+  title: string,
+  summary: string,
+  source: string,
+  category: string,
+  tier: 1 | 2 | 3,
+  pubDate: Date | null
+): { valueScore: number; priorityTier: number; geoRegion: string } {
+  // 1. Priority Tier Score (Weight: 40%)
+  const tierScore = tier === 1 ? 100 : tier === 2 ? 75 : 55;
+
+  // 2. Recency Decay Score (Weight: 30%)
+  let recencyScore = 50;
+  if (pubDate) {
+    const ageHours = (Date.now() - pubDate.getTime()) / (1000 * 60 * 60);
+    if (ageHours <= 2) recencyScore = 100;
+    else if (ageHours <= 6) recencyScore = 85;
+    else if (ageHours <= 12) recencyScore = 70;
+    else if (ageHours <= 24) recencyScore = 50;
+    else recencyScore = 30;
   }
 
-  // 2. Check <enclosure url="..." />
-  const enclosure = itemBlock.match(/<enclosure[^>]+url="([^"]+)"/i);
-  if (enclosure && enclosure[1] && /\.(jpg|jpeg|png|webp)/i.test(enclosure[1])) {
-    return enclosure[1].replace(/&amp;/g, '&');
+  // 3. Impact & Verification Weight (Weight: 30%)
+  let impactScore = 60;
+  const combinedText = `${title} ${summary}`.toUpperCase();
+  const highImpactKeywords = [
+    'BREAKING', 'URGENT', 'CRISIS', 'SUMMIT', 'CEASEFIRE', 'RATE CUT', 'INFLATION',
+    'SANCTIONS', 'PRESIDENTIAL', 'ELECTION', 'HISTORIC', 'SURGE', 'INVESTIGATION',
+    'DISASTER', 'MERGER', 'TREATY', 'PENTAGON', 'SECURITY COUNCIL', 'ACCORD', 'EXPLOSION',
+    'TREASURY', 'STIMULUS', 'WAR', 'TRADE DEAL', 'ALLIANCE'
+  ];
+  for (const kw of highImpactKeywords) {
+    if (combinedText.includes(kw)) {
+      impactScore = Math.min(100, impactScore + 20);
+      break;
+    }
   }
 
-  // 3. Check <media:thumbnail url="..." />
-  const thumbnail = itemBlock.match(/<media:thumbnail[^>]+url="([^"]+)"/i);
-  if (thumbnail && thumbnail[1]) {
-    return thumbnail[1].replace(/&amp;/g, '&');
+  // Source Credibility boost
+  const topSources = ['Reuters', 'Associated Press', 'Nikkei Asia', 'AllAfrica', 'UN News', 'SCMP', 'Bloomberg', 'BBC', 'MercoPress'];
+  if (topSources.some(s => source.includes(s))) {
+    impactScore = Math.min(100, impactScore + 15);
   }
 
-  // 4. Check embedded <img src="..." />
-  const embeddedImg = itemBlock.match(/<img[^>]+src="([^"]+)"/i);
-  if (embeddedImg && embeddedImg[1]) {
-    return embeddedImg[1].replace(/&amp;/g, '&');
-  }
+  // Geographic region detection
+  let geoRegion = 'Global';
+  const catLower = category.toLowerCase();
+  if (catLower.includes('africa')) geoRegion = 'Africa';
+  else if (catLower.includes('asia')) geoRegion = 'Asia';
+  else if (catLower.includes('latam') || catLower.includes('latin')) geoRegion = 'LatinAmerica';
+  else if (catLower.includes('us')) geoRegion = 'US';
 
-  // 5. Fall back to curated category photography
-  return getRandomImage(category, index);
+  const valueScore = Math.round(tierScore * 0.40 + recencyScore * 0.30 + impactScore * 0.30);
+  return { valueScore, priorityTier: tier, geoRegion };
 }
 
-/**
- * Strip tracking and referral query parameters for clean canonical URLs and stable hashing
- */
-export function cleanTrackingParams(rawUrl: string): string {
-  try {
-    const parsed = new URL(rawUrl);
-    const keysToDelete: string[] = [];
-    parsed.searchParams.forEach((_, key) => {
-      if (
-        key.startsWith('utm_') ||
-        key === 'oc' ||
-        key === 'fbclid' ||
-        key === 'gclid' ||
-        key === 'ref' ||
-        key === 'source' ||
-        key === 'cmpid'
-      ) {
-        keysToDelete.push(key);
-      }
-    });
-    keysToDelete.forEach((k) => parsed.searchParams.delete(k));
-    return parsed.toString();
-  } catch {
-    return rawUrl.split('?')[0];
-  }
-}
-
-/**
- * Fetch and parse raw RSS/Atom XML feeds with rich media extraction
- */
 export async function fetchLiveRssFeed(
   feedUrl: string,
   category: string,
-  defaultSource: string = 'Wire Services'
+  fallbackSource: string
 ): Promise<WireArticle[]> {
   try {
     const res = await fetch(feedUrl, {
-      signal: AbortSignal.timeout(6500),
       headers: {
         'User-Agent': 'ProlificNews-WireHarvester/2.0 (+https://prolific.news)',
+        Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
       },
-      next: { revalidate: 60 },
-    } as any);
+      signal: AbortSignal.timeout(8000),
+    });
 
     if (!res.ok) {
       console.warn(`[Wire] Feed returned HTTP ${res.status}: ${feedUrl}`);
@@ -240,70 +275,69 @@ export async function fetchLiveRssFeed(
     }
 
     const xml = await res.text();
-    // Handle both standard RSS <item> and Atom <entry>
-    const itemRegex = /<(?:item|entry)>([\s\S]*?)<\/(?:item|entry)>/gi;
     const items: WireArticle[] = [];
-    let match;
-    let index = 0;
+    const itemRegex = /<(?:item|entry)(?:[\s>][\s\S]*?<\/(?:item|entry)>|[\s\S]*?$)/gi;
+    const matches = xml.match(itemRegex) || [];
 
-    while ((match = itemRegex.exec(xml)) !== null && items.length < 25) {
-      const itemBlock = match[1];
-
-      const titleMatch = itemBlock.match(/<title[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i);
+    for (let i = 0; i < Math.min(matches.length, 25); i++) {
+      const block = matches[i];
+      const titleMatch = block.match(/<title[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i);
       const linkMatch =
-        itemBlock.match(/<link[^>]*href="([^"]+)"/i) ||
-        itemBlock.match(/<link>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
-      const pubDateMatch =
-        itemBlock.match(/<(?:pubDate|published|updated)>([\s\S]*?)<\/(?:pubDate|published|updated)>/i);
+        block.match(/<link[^>]*href=["']([^"']+)["']/i) ||
+        block.match(/<link[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
       const descMatch =
-        itemBlock.match(/<(?:description|summary|content[^>]*)>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/(?:description|summary|content)>/i);
-      const sourceMatch = itemBlock.match(/<source[^>]*>([\s\S]*?)<\/source>/i);
+        block.match(/<description[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i) ||
+        block.match(/<summary[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/summary>/i) ||
+        block.match(/<content[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content>/i);
+      const pubDateMatch =
+        block.match(/<pubDate[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/pubDate>/i) ||
+        block.match(/<updated[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/updated>/i) ||
+        block.match(/<dc:date[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/dc:date>/i);
 
-      if (titleMatch && linkMatch) {
-        const rawSource = sourceMatch ? stripHtml(sourceMatch[1]) : defaultSource;
-        const { title, source } = cleanHeadline(titleMatch[1], rawSource);
-        const rawLink = stripHtml(linkMatch[1]);
-        const link = cleanTrackingParams(rawLink);
+      const rawTitle = titleMatch ? titleMatch[1].trim() : '';
+      if (!rawTitle) continue;
 
-        // STRICT EXCLUSION: Discard CNN and BBC stories
-        if (
-          /\bcnn\b/i.test(source) ||
-          /\bbbc\b/i.test(source) ||
-          /\bcnn\b/i.test(link) ||
-          /\bbbc\b/i.test(link) ||
-          /\bcnn\b/i.test(title) ||
-          /\bbbc\b/i.test(title)
-        ) {
-          continue;
-        }
-
-        const rawPubDate = pubDateMatch ? stripHtml(pubDateMatch[1]) : '';
-        const parsedPub = rawPubDate ? new Date(rawPubDate).getTime() : NaN;
-        // Clamp missing, invalid, or future-dated timestamps to "now" so feeds can never pin stale or bogus items on top
-        const pubDate =
-          Number.isNaN(parsedPub) || parsedPub > Date.now() ? new Date().toISOString() : new Date(parsedPub).toISOString();
-        const summary = cleanOrGenerateSummary(descMatch ? descMatch[1] : '', title, source, category);
-        const mediaUrl = extractMediaUrl(itemBlock, category, index);
-
-        // Derive truly unique ID via SHA-256 hash of canonical link + title
-        const hash = crypto.createHash('sha256').update(`${link}-${title}`).digest('hex');
-        const id = `wire-${hash.slice(0, 24)}`;
-        const slug = slugify(title, hash);
-
-        items.push({
-          id,
-          slug,
-          source,
-          title,
-          link,
-          summary,
-          category,
-          mediaUrl,
-          pubDate,
-          timeAgo: calculateTimeAgo(pubDate),
-        });
-        index++;
+      const { title, source } = cleanHeadline(rawTitle, fallbackSource);
+      let link = linkMatch ? linkMatch[1].trim() : '';
+      if (link.startsWith('<![CDATA[')) {
+        link = link.replace(/^<!\[CDATA\[/, '').replace(/\]\]>$/, '').trim();
       }
+      if (!link) continue;
+
+      const rawDesc = descMatch ? descMatch[1].trim() : '';
+      const summary = cleanOrGenerateSummary(rawDesc, title, source, category);
+
+      let pubDate = new Date();
+      if (pubDateMatch && pubDateMatch[1]) {
+        const parsed = new Date(pubDateMatch[1].trim());
+        const now = Date.now();
+        if (!isNaN(parsed.getTime()) && parsed.getTime() <= now + 60 * 60 * 1000) {
+          pubDate = parsed;
+        }
+      }
+
+      let mediaUrl = extractMediaUrl(block);
+      if (!mediaUrl) {
+        const seed = Math.abs(title.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0));
+        mediaUrl = getRandomImage(category, seed);
+      }
+
+      const idHash = crypto.createHash('md5').update(`${title}|${link}`).digest('hex').slice(0, 16);
+      const wireId = `wire-${idHash}`;
+      const slug = slugify(title, idHash.slice(0, 8));
+
+      items.push({
+        id: wireId,
+        slug,
+        source,
+        title,
+        link,
+        summary,
+        category,
+        mediaUrl,
+        pubDate: pubDate.toISOString(),
+        timeAgo: calculateTimeAgo(pubDate.toISOString()),
+      });
     }
 
     return items;
@@ -321,31 +355,41 @@ export interface FeedConfig {
 }
 
 export const FEED_REGISTRY: FeedConfig[] = [
-  // Tier 1: High Velocity (Cadence: 1-2 min) - Politics, Markets, Breaking Desk
+  // Tier 1: High Velocity Breaking, Politics, Business & Emerging Global Hubs
   { url: 'https://moxie.foxnews.com/google-publisher/politics.xml', category: 'Politics', source: 'Fox News Politics', tier: 1 },
   { url: 'https://news.google.com/rss/search?q=source:%22Associated%20Press%22+politics&hl=en-US&gl=US&ceid=US:en', category: 'Politics', source: 'Associated Press', tier: 1 },
   { url: 'https://moxie.foxbusiness.com/google-publisher/markets.xml', category: 'Business', source: 'Fox Business', tier: 1 },
   { url: 'https://moxie.foxbusiness.com/google-publisher/economy.xml', category: 'Business', source: 'Fox Business Economy', tier: 1 },
   { url: 'https://news.google.com/rss/search?q=source:%22Reuters%22+business&hl=en-US&gl=US&ceid=US:en', category: 'Business', source: 'Reuters', tier: 1 },
-  { url: 'https://moxie.foxnews.com/google-publisher/latest.xml', category: 'General', source: 'Fox News Desk', tier: 1 },
+  { url: 'https://moxie.foxnews.com/google-publisher/latest.xml', category: 'General', source: 'Prolific Wire Desk', tier: 1 },
 
-  // Tier 2: Global & Core (Cadence: 5 min) - U.S., World, Sports, Entertainment
+  // Tier 1 Regional: Africa, Asia & Latin America Primary Wires
+  { url: 'https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf', category: 'Africa', source: 'AllAfrica Global', tier: 1 },
+  { url: 'https://news.google.com/rss/search?q=when:24h+Africa+business+OR+politics&hl=en&gl=US&ceid=US:en', category: 'Africa', source: 'Africa Wire Desk', tier: 1 },
+  { url: 'https://asia.nikkei.com/rss/feed/nar', category: 'Asia', source: 'Nikkei Asia', tier: 1 },
+  { url: 'https://www.scmp.com/rss/91/feed', category: 'Asia', source: 'South China Morning Post', tier: 1 },
+  { url: 'https://news.google.com/rss/search?q=when:24h+Asia+markets+OR+diplomacy&hl=en&gl=US&ceid=US:en', category: 'Asia', source: 'Asia-Pacific Wire', tier: 1 },
+  { url: 'https://en.mercopress.com/rss', category: 'LatAm', source: 'MercoPress', tier: 1 },
+  { url: 'https://news.google.com/rss/search?q=when:24h+Latin+America+markets+OR+governance&hl=en&gl=US&ceid=US:en', category: 'LatAm', source: 'Latin America Wire', tier: 1 },
+
+  // Tier 2: Global & Core (Cadence: 5 min) - U.S., World, Sports, Entertainment & Regional Bureaus
   { url: 'https://moxie.foxnews.com/google-publisher/us.xml', category: 'US', source: 'Fox News U.S.', tier: 2 },
   { url: 'https://moxie.foxnews.com/google-publisher/world.xml', category: 'World', source: 'Fox World', tier: 2 },
   { url: 'https://news.google.com/rss/search?q=source:%22Reuters%22+world&hl=en-US&gl=US&ceid=US:en', category: 'World', source: 'Reuters', tier: 2 },
-  { url: 'https://globalvoices.org/feed/', category: 'World', source: 'Global Voices', tier: 2 },
   { url: 'https://news.un.org/feed/subscribe/en/news/all/rss.xml', category: 'World', source: 'UN News', tier: 2 },
+  { url: 'https://news.google.com/rss/search?q=source:%22Premium%20Times%22+OR+source:%22Daily%20Nation%22+OR+source:%22News24%22&hl=en&gl=US&ceid=US:en', category: 'Africa', source: 'Pan-Africa Bureau', tier: 2 },
+  { url: 'https://news.google.com/rss/search?q=source:%22The%20Straits%20Times%22+OR+source:%22Channel%20News%20Asia%22&hl=en&gl=US&ceid=US:en', category: 'Asia', source: 'Southeast Asia Desk', tier: 2 },
+  { url: 'https://news.google.com/rss/search?q=source:%22Buenos%20Aires%20Times%22+OR+source:%22Rio%20Times%22&hl=en&gl=US&ceid=US:en', category: 'LatAm', source: 'South America Bureau', tier: 2 },
   { url: 'https://moxie.foxnews.com/google-publisher/sports.xml', category: 'Sports', source: 'Fox Sports', tier: 2 },
   { url: 'https://www.espn.com/espn/rss/news', category: 'Sports', source: 'ESPN', tier: 2 },
   { url: 'https://moxie.foxnews.com/google-publisher/entertainment.xml', category: 'Entertainment', source: 'Fox Entertainment', tier: 2 },
 
-  // Tier 3: In-Depth & Thought Leadership (Cadence: 15 min) - Tech, Science, Opinion, Lifestyle
+  // Tier 3: Thought Leadership, Tech, Science, Opinion, Lifestyle
   { url: 'https://moxie.foxnews.com/google-publisher/opinion.xml', category: 'Opinion', source: 'Fox News Opinion', tier: 3 },
   { url: 'https://theconversation.com/global/articles.atom', category: 'Opinion', source: 'The Conversation', tier: 3 },
   { url: 'https://moxie.foxnews.com/google-publisher/tech.xml', category: 'Tech', source: 'Fox Tech', tier: 3 },
   { url: 'https://moxie.foxnews.com/google-publisher/science.xml', category: 'Tech', source: 'Fox Science', tier: 3 },
   { url: 'https://www.nasa.gov/news-release/feed/', category: 'Tech', source: 'NASA', tier: 3 },
-  { url: 'https://news.mongabay.com/feed/', category: 'Tech', source: 'Mongabay', tier: 3 },
   { url: 'https://moxie.foxnews.com/google-publisher/lifestyle.xml', category: 'Lifestyle', source: 'Fox Lifestyle', tier: 3 },
   { url: 'https://moxie.foxnews.com/google-publisher/travel.xml', category: 'Lifestyle', source: 'Fox Travel', tier: 3 },
 ];
@@ -389,31 +433,43 @@ async function insertWireArticles(wireNews: WireArticle[]): Promise<number> {
   const db = createDb();
   let insertedCount = 0;
 
-  const valuesToInsert = wireNews.map((item) => ({
-    id: item.id,
-    slug: item.slug,
-    source: item.source,
-    title: item.title,
-    link: item.link,
-    summary: item.summary,
-    category: item.category,
-    mediaUrl: item.mediaUrl,
-    pubDate: new Date(item.pubDate),
-    stagedAsDraft: false,
-    isArchived: false,
-  }));
+  const valuesToInsert = wireNews.map((item) => {
+    const { valueScore, geoRegion } = computeValueScore(
+      item.title,
+      item.summary,
+      item.source,
+      item.category,
+      1,
+      new Date(item.pubDate)
+    );
+    return {
+      id: item.id,
+      slug: item.slug,
+      source: item.source,
+      title: item.title,
+      link: item.link,
+      summary: item.summary,
+      category: item.category,
+      mediaUrl: item.mediaUrl,
+      valueScore,
+      geoRegion,
+      pubDate: new Date(item.pubDate),
+      stagedAsDraft: false,
+      isArchived: false,
+    };
+  });
 
   try {
     await db.insert(wireItems).values(valuesToInsert).onConflictDoNothing();
     insertedCount = valuesToInsert.length;
   } catch (err) {
     console.warn('[Wire] Bulk insert fallback to individual insert:', err);
-    for (const item of valuesToInsert) {
+    for (const val of valuesToInsert) {
       try {
-        await db.insert(wireItems).values(item).onConflictDoNothing();
+        await db.insert(wireItems).values(val).onConflictDoNothing();
         insertedCount++;
       } catch {
-        // continue
+        // ignore unique conflict
       }
     }
   }
@@ -421,11 +477,9 @@ async function insertWireArticles(wireNews: WireArticle[]): Promise<number> {
   return insertedCount;
 }
 
-const CATEGORY_ID_MAP: Record<string, string> = {
+export const CATEGORY_ID_MAP: Record<string, string> = {
   politics: 'cat-politics',
   us: 'cat-us',
-  'u.s.': 'cat-us',
-  general: 'cat-us',
   opinion: 'cat-opinion',
   entertainment: 'cat-entertainment',
   sports: 'cat-sports',
@@ -433,13 +487,26 @@ const CATEGORY_ID_MAP: Record<string, string> = {
   business: 'cat-business',
   world: 'cat-world',
   tech: 'cat-tech',
+  africa: 'cat-africa',
+  asia: 'cat-asia',
+  latam: 'cat-latam',
 };
 
-const CATEGORY_SLUGS = ['politics', 'us', 'opinion', 'entertainment', 'sports', 'lifestyle', 'business', 'world', 'tech'];
+export const CATEGORY_SLUGS = [
+  'politics',
+  'us',
+  'opinion',
+  'entertainment',
+  'sports',
+  'lifestyle',
+  'business',
+  'world',
+  'tech',
+  'africa',
+  'asia',
+  'latam',
+];
 
-/**
- * Purge Vercel edge/ISR caches for the homepage and every category hub so fresh news is visible immediately.
- */
 export async function revalidateEdge(paths?: string[]): Promise<void> {
   const webUrl = process.env.NEXT_PUBLIC_WEB_URL || 'https://prolific.news';
   const secret = process.env.REVALIDATION_SECRET;
@@ -447,7 +514,7 @@ export async function revalidateEdge(paths?: string[]): Promise<void> {
     console.warn('[Revalidate] REVALIDATION_SECRET not set; skipping edge purge');
     return;
   }
-  const targets = paths && paths.length ? paths : ['/', '/archive', ...CATEGORY_SLUGS.map((s) => `/category/${s}`)];
+  const targets = paths && paths.length ? paths : ['/', '/archive', '/for-you', ...CATEGORY_SLUGS.map((s) => `/category/${s}`)];
   await Promise.allSettled(
     targets.map((path) =>
       fetch(`${webUrl}/api/revalidate`, {
@@ -460,10 +527,6 @@ export async function revalidateEdge(paths?: string[]): Promise<void> {
   );
 }
 
-/**
- * Auto-publish: promote the freshest non-archived wire items of every category into the published
- * `articles` table (idempotent via deterministic ids) so homepage and category hubs never go stale.
- */
 export async function autoPromoteFreshWireItems(
   perCategory = 3
 ): Promise<{ promoted: number; byCategory: Record<string, number> }> {
@@ -473,24 +536,43 @@ export async function autoPromoteFreshWireItems(
     .from(wireItems)
     .where(eq(wireItems.isArchived, false))
     .orderBy(desc(wireItems.pubDate))
-    .limit(200);
+    .limit(300);
 
   const taken: Record<string, number> = {};
   const byCategory: Record<string, number> = {};
   let promoted = 0;
   const now = Date.now();
 
+  let highestScore = 0;
+  let topCandidateId = '';
+
   for (const r of rows) {
     const categoryId = CATEGORY_ID_MAP[(r.category || '').toLowerCase()];
     if (!categoryId) continue;
     if ((taken[categoryId] || 0) >= perCategory) continue;
-    if (r.pubDate && r.pubDate.getTime() > now + 60 * 60 * 1000) continue; // skip bogus future dates
+    if (r.pubDate && r.pubDate.getTime() > now + 60 * 60 * 1000) continue;
     taken[categoryId] = (taken[categoryId] || 0) + 1;
 
     const title = stripHtml(r.title);
     const summary = stripHtml(r.summary || '') || cleanOrGenerateSummary('', title, r.source, r.category);
     const slug = r.slug || slugify(title, r.id.replace('wire-', ''));
     const label = categoryId.replace('cat-', '').toUpperCase();
+
+    // Compute value score and tier
+    const { valueScore, priorityTier, geoRegion } = computeValueScore(
+      title,
+      summary,
+      r.source,
+      r.category,
+      1,
+      r.pubDate
+    );
+
+    const isTopStory = valueScore >= 85;
+    if (valueScore > highestScore) {
+      highestScore = valueScore;
+      topCandidateId = `art-${r.id.replace('wire-', '')}`;
+    }
 
     try {
       const inserted = await db
@@ -502,24 +584,28 @@ export async function autoPromoteFreshWireItems(
           subtitle: summary,
           keyDevelopments: [
             `Dispatch filed via ${r.source}.`,
-            `Prolific News Network ${label} desk is tracking developments.`,
-            `Rolling analysis streaming live on Prolific Watch Hub.`,
+            `Prolific News Network ${label} desk tracking developments.`,
+            `Rolling broadcast analysis streaming live on Prolific Watch Hub.`,
           ],
-          content: `<p class="text-xl font-serif text-gray-800 leading-relaxed font-semibold mb-6">${summary}</p><p class="mb-4">Source: <a href="${r.link}" target="_blank" rel="noopener noreferrer">${r.source}</a>. Prolific Newsroom is monitoring this story and will update as more information is verified.</p>`,
+          content: `<p class="text-xl font-serif text-gray-800 leading-relaxed font-semibold mb-6">${summary}</p><p class="mb-4">Source: <a href="${r.link}" target="_blank" rel="noopener noreferrer">${r.source}</a>. Prolific Newsroom is monitoring this developing story across our regional bureaus and will update as more information is confirmed.</p>`,
           categoryId,
-          tags: [r.category, r.source],
-          authorId: 'auth-sterling',
+          tags: [r.category, r.source, geoRegion],
+          authorId: 'auth-ed-board',
           leadMediaType: 'IMAGE',
           leadMediaUrl: r.mediaUrl,
           leadMediaCaption: `${title} — via ${r.source}.`,
           isLeadHero: false,
-          isBreaking: false,
+          isBreaking: isTopStory,
           status: 'PUBLISHED',
           readTimeMinutes: 3,
+          valueScore,
+          priorityTier,
+          geoRegion,
           publishedAt: r.pubDate || new Date(),
         })
         .onConflictDoNothing()
         .returning({ id: articles.id });
+
       if (inserted.length > 0) {
         promoted++;
         byCategory[categoryId] = (byCategory[categoryId] || 0) + 1;
@@ -529,7 +615,17 @@ export async function autoPromoteFreshWireItems(
     }
   }
 
-  // Freshness guard: breaking alerts auto-expire after 6 hours so the banner never shows stale news
+  // Promote single highest value score article to isLeadHero = true
+  if (topCandidateId && highestScore >= 80) {
+    try {
+      await db.update(articles).set({ isLeadHero: false });
+      await db.update(articles).set({ isLeadHero: true }).where(eq(articles.id, topCandidateId));
+    } catch (err) {
+      console.warn('[AutoPromote] lead hero update failed:', err);
+    }
+  }
+
+  // Freshness guard: breaking alerts auto-expire after 6 hours
   try {
     await db
       .update(breakingAlerts)
@@ -547,7 +643,7 @@ export async function syncTieredFeedsToNeonDb(tier: 1 | 2 | 3): Promise<{ insert
   const inserted = await insertWireArticles(wireNews);
   let promoted = 0;
   try {
-    ({ promoted } = await autoPromoteFreshWireItems(tier === 1 ? 3 : 2));
+    ({ promoted } = await autoPromoteFreshWireItems(tier === 1 ? 4 : 2));
     if (promoted > 0) await revalidateEdge();
   } catch (err) {
     console.error('[AutoPromote] failed:', err);
@@ -562,123 +658,138 @@ export async function syncCategoryFeedToNeonDb(category: string): Promise<{ inse
 }
 
 export async function syncWireFeedsToNeonDb(): Promise<{ inserted: number; total: number; promoted: number }> {
-  const wireNews = await pullRealNewsFeed();
-  const inserted = await insertWireArticles(wireNews);
+  console.log('[Wire] Pulling feeds across all 12 categories...');
+  const allNews = await pullRealNewsFeed();
+  console.log(`[Wire] Fetched and deduplicated ${allNews.length} wire articles`);
+
+  const inserted = await insertWireArticles(allNews);
+  console.log(`[Wire] Inserted ${inserted} new items into Neon DB`);
+
   let promoted = 0;
   try {
-    ({ promoted } = await autoPromoteFreshWireItems(4));
-    await revalidateEdge();
+    const promoResult = await autoPromoteFreshWireItems(3);
+    promoted = promoResult.promoted;
+    console.log(`[Wire] Auto-promoted ${promoted} fresh articles across categories:`, promoResult.byCategory);
+    if (promoted > 0) await revalidateEdge();
   } catch (err) {
-    console.error('[AutoPromote] failed:', err);
+    console.error('[Wire] Auto-promote step failed:', err);
   }
-  return { inserted, total: wireNews.length, promoted };
+
+  return { inserted, total: allNews.length, promoted };
 }
 
-/**
- * Content Lifecycle & Archival Engine
- * 1. Archives wire items older than retentionDays (default: 14 days)
- * 2. Archives published articles older than retentionDays (default: 30 days)
- */
-export async function archiveOldContent(options?: {
+export async function archiveOldContent(options: {
   wireRetentionDays?: number;
   articleRetentionDays?: number;
-}): Promise<{ archivedWires: number; archivedArticles: number }> {
+} = {}): Promise<{ archivedWireCount: number; archivedArticleCount: number }> {
+  const wireDays = options.wireRetentionDays ?? 14;
+  const articleDays = options.articleRetentionDays ?? 30;
   const db = createDb();
-  const wireDays = options?.wireRetentionDays ?? 14;
-  const articleDays = options?.articleRetentionDays ?? 30;
+  const now = new Date();
 
-  const wireCutoff = new Date(Date.now() - wireDays * 24 * 60 * 60 * 1000);
-  const articleCutoff = new Date(Date.now() - articleDays * 24 * 60 * 60 * 1000);
+  const wireCutoff = new Date(now.getTime() - wireDays * 24 * 60 * 60 * 1000);
+  const articleCutoff = new Date(now.getTime() - articleDays * 24 * 60 * 60 * 1000);
 
-  let archivedWires = 0;
-  let archivedArticles = 0;
+  let archivedWireCount = 0;
+  let archivedArticleCount = 0;
 
   try {
     const wireRes = await db
       .update(wireItems)
-      .set({ isArchived: true, archivedAt: new Date() })
-      .where(lt(wireItems.pubDate, wireCutoff));
-    archivedWires = (wireRes as any)?.rowCount ?? 0;
+      .set({ isArchived: true, archivedAt: now })
+      .where(and(eq(wireItems.isArchived, false), lt(wireItems.pubDate, wireCutoff)))
+      .returning({ id: wireItems.id });
+    archivedWireCount = wireRes.length;
   } catch (err) {
-    console.error('[Archival] Error archiving old wire items:', err);
+    console.error('[Archive] wire items archival failed:', err);
   }
 
   try {
-    const articleRes = await db
+    const artRes = await db
       .update(articles)
-      .set({ status: 'ARCHIVED', updatedAt: new Date(), archivedAt: new Date() })
-      .where(lt(articles.publishedAt, articleCutoff));
-    archivedArticles = (articleRes as any)?.rowCount ?? 0;
+      .set({ status: 'ARCHIVED', archivedAt: now })
+      .where(and(eq(articles.status, 'PUBLISHED'), lt(articles.publishedAt, articleCutoff)))
+      .returning({ id: articles.id });
+    archivedArticleCount = artRes.length;
   } catch (err) {
-    console.error('[Archival] Error archiving old articles:', err);
+    console.error('[Archive] articles archival failed:', err);
   }
 
-  return { archivedWires, archivedArticles };
+  return { archivedWireCount, archivedArticleCount };
 }
 
-/**
- * Promote a wire item to a full published article in Neon DB
- */
 export async function promoteWireItemToArticle(
   item: WireArticle,
   options: { isLeadHero?: boolean; isBreaking?: boolean; authorId?: string } = {}
-) {
+): Promise<{ success: boolean; articleId: string; slug: string }> {
   const db = createDb();
-  const authorId = options.authorId || 'auth-sterling';
-  const categoryId = `cat-${item.category.toLowerCase()}`;
+  const title = stripHtml(item.title);
+  const summary = stripHtml(item.summary || '') || cleanOrGenerateSummary('', title, item.source, item.category);
+  const slug = item.slug || slugify(title, item.id.replace('wire-', ''));
+  const categoryId = CATEGORY_ID_MAP[(item.category || '').toLowerCase()] || 'cat-world';
+  const articleId = `art-${item.id.replace('wire-', '')}`;
+  const label = item.category.toUpperCase();
 
-  const cleanTitle = stripHtml(item.title);
-  const cleanSummary = stripHtml(item.summary) || cleanOrGenerateSummary('', cleanTitle, item.source, item.category);
+  const { valueScore, priorityTier, geoRegion } = computeValueScore(
+    title,
+    summary,
+    item.source,
+    item.category,
+    1,
+    item.pubDate ? new Date(item.pubDate) : new Date()
+  );
 
   const keyDevelopments = [
-    `Direct wire dispatches verified through ${item.source} reporting bureaus.`,
-    `Prolific News Network national and global security desks are tracking ongoing developments.`,
-    `Rolling broadcast analysis and panel discussions streaming live on Prolific Watch Hub.`,
+    `Dispatch filed via ${item.source}.`,
+    `Prolific News Network ${label} desk tracking developments.`,
+    `Rolling broadcast analysis streaming live on Prolific Watch Hub.`,
   ];
 
-  const htmlContent = `
-    <p class="text-xl font-serif text-gray-800 leading-relaxed font-semibold mb-6">${cleanSummary}</p>
-    <p class="mb-4">PROLIFIC NEWSROOM — Breaking reports confirmed by ${item.source} indicate fast-moving developments across critical sectors. Government, market, and international monitors are coordinating responses as situation updates are issued.</p>
-    <p class="mb-4">“Our editorial desks are continuously verifying incoming information from correspondents in the field,” stated senior network producers during an emergency broadcast update.</p>
-    <p class="mb-4">Stay with Prolific News Network for continuous live video analysis, expert panel commentary, and minute-by-minute updates streaming 24/7 on Prolific Watch Hub.</p>
-  `;
+  const content = `<p class="text-xl font-serif text-gray-800 leading-relaxed font-semibold mb-6">${summary}</p><p class="mb-4">Source: <a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.source}</a>. Prolific Newsroom is monitoring this developing story across our regional bureaus and will update as more information is confirmed.</p>`;
 
   await db
     .insert(articles)
     .values({
-      id: `art-${item.id.replace('wire-', '')}`,
-      slug: item.slug,
-      title: cleanTitle.toUpperCase(),
-      subtitle: cleanSummary,
+      id: articleId,
+      slug,
+      title: title.toUpperCase(),
+      subtitle: summary,
       keyDevelopments,
-      content: htmlContent,
+      content,
       categoryId,
-      tags: [item.category, item.source, 'Breaking News'],
-      authorId,
-      leadMediaType: options.isLeadHero ? 'VIDEO' : 'IMAGE',
-      leadMediaUrl: options.isLeadHero
-        ? 'https://go5lm6a6dawb-hls-live.5centscdn.com/translation2/d0dbe915091d400bd8ee7f27f0791303.sdp/playlist.m3u8'
-        : item.mediaUrl,
-      leadMediaCaption: `${cleanTitle} — Reporting via ${item.source} and Prolific Newsroom.`,
-      isLeadHero: options.isLeadHero || false,
-      isBreaking: options.isBreaking ?? true,
+      tags: [item.category, item.source, geoRegion],
+      authorId: options.authorId || 'auth-ed-board',
+      leadMediaType: 'IMAGE',
+      leadMediaUrl: item.mediaUrl,
+      leadMediaCaption: `${title} — via ${item.source}.`,
+      isLeadHero: options.isLeadHero ?? false,
+      isBreaking: options.isBreaking ?? (valueScore >= 85),
       status: 'PUBLISHED',
       readTimeMinutes: 3,
-      publishedAt: new Date(item.pubDate),
+      valueScore,
+      priorityTier,
+      geoRegion,
+      publishedAt: item.pubDate ? new Date(item.pubDate) : new Date(),
     })
-    .onConflictDoNothing();
+    .onConflictDoUpdate({
+      target: articles.slug,
+      set: {
+        title: title.toUpperCase(),
+        subtitle: summary,
+        isLeadHero: options.isLeadHero ?? false,
+        isBreaking: options.isBreaking ?? (valueScore >= 85),
+        valueScore,
+        priorityTier,
+        geoRegion,
+      },
+    });
 
-  if (options.isLeadHero || options.isBreaking) {
-    await db
-      .insert(breakingAlerts)
-      .values({
-        id: `alert-${Date.now()}`,
-        headline: cleanTitle.toUpperCase(),
-        url: `/article/${item.slug}`,
-        urgency: 'BREAKING',
-        active: true,
-        publishedAt: new Date(),
-      })
-      .onConflictDoNothing();
+  if (options.isLeadHero) {
+    await db.update(articles).set({ isLeadHero: false });
+    await db.update(articles).set({ isLeadHero: true }).where(eq(articles.id, articleId));
   }
+
+  await revalidateEdge();
+
+  return { success: true, articleId, slug };
 }

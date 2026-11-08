@@ -119,7 +119,7 @@ export default function AdminDashboardPage() {
           categoryId: 'cat-general',
           tags: ['Breaking', 'AI Synthesized', 'Wire'],
           leadMediaType: 'VIDEO',
-          leadMediaUrl: 'https://go5lm6a6dawb-hls-live.5centscdn.com/translation2/d0dbe915091d400bd8ee7f27f0791303.sdp/playlist.m3u8',
+          leadMediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
           leadMediaCaption: `${selectedHeadline} — Prolific News Digital Broadcast Pool`,
           isLeadHero: true,
           isBreaking: true,

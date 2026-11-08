@@ -33,6 +33,9 @@ export const articles = pgTable('articles', {
   isBreaking: boolean('is_breaking').default(false).notNull(),
   status: varchar('status', { length: 32 }).default('DRAFT').notNull(),
   readTimeMinutes: integer('read_time_minutes').default(3).notNull(),
+  valueScore: integer('value_score').default(50).notNull(),
+  priorityTier: integer('priority_tier').default(2).notNull(),
+  geoRegion: varchar('geo_region', { length: 64 }).default('Global').notNull(),
   publishedAt: timestamp('published_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -48,6 +51,8 @@ export const wireItems = pgTable('wire_items', {
   summary: text('summary'),
   category: varchar('category', { length: 64 }).default('General').notNull(),
   mediaUrl: text('media_url'),
+  valueScore: integer('value_score').default(50).notNull(),
+  geoRegion: varchar('geo_region', { length: 64 }).default('Global').notNull(),
   pubDate: timestamp('pub_date', { withTimezone: true }),
   stagedAsDraft: boolean('staged_as_draft').default(false).notNull(),
   isArchived: boolean('is_archived').default(false).notNull(),
@@ -55,3 +60,12 @@ export const wireItems = pgTable('wire_items', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const newsletterSubscribers = pgTable('newsletter_subscribers', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  email: varchar('email', { length: 255 }).unique().notNull(),
+  regions: jsonb('regions').$type<string[]>().default(['Global']).notNull(),
+  topics: jsonb('topics').$type<string[]>().default(['Politics', 'Business', 'Tech']).notNull(),
+  frequency: varchar('frequency', { length: 32 }).default('DAILY_MORNING').notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});

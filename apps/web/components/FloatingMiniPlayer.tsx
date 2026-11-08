@@ -5,9 +5,6 @@ import { X, Maximize2, Radio } from 'lucide-react';
 import Link from 'next/link';
 import { LiveStreamPlayer } from './LiveStreamPlayer';
 
-const LIVE_STREAM_M3U8 =
-  'https://go5lm6a6dawb-hls-live.5centscdn.com/translation2/d0dbe915091d400bd8ee7f27f0791303.sdp/playlist.m3u8';
-
 export function FloatingMiniPlayer() {
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -38,7 +35,7 @@ export function FloatingMiniPlayer() {
       <div className="bg-[#002B49] text-white px-2.5 py-1.5 flex items-center justify-between text-xs font-headline font-bold uppercase tracking-wider">
         <div className="flex items-center gap-1.5 text-[#FFCC00]">
           <Radio className="w-3.5 h-3.5 animate-pulse text-[#CC0000]" />
-          <span>Prolific Live Feed</span>
+          <span>Prolific 24/7 Channel</span>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/watch" className="text-gray-300 hover:text-white" title="Expand Fullscreen">
@@ -57,7 +54,6 @@ export function FloatingMiniPlayer() {
       {/* Live Video Stream Container */}
       <div className="relative aspect-video bg-black">
         <LiveStreamPlayer
-          streamUrl={LIVE_STREAM_M3U8}
           autoPlay={true}
           showChyron={false}
           className="w-full h-full"

@@ -72,7 +72,7 @@ export async function POST(req: Request) {
       const result = await archiveOldContent();
       return NextResponse.json({
         success: true,
-        message: `Archived ${result.archivedWires} wire items and ${result.archivedArticles} articles.`,
+        message: `Archived ${result.archivedWireCount} wire items and ${result.archivedArticleCount} articles.`,
         ...result,
       });
     }

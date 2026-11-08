@@ -139,7 +139,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           {article.leadMedia?.type === 'VIDEO' ? (
             <div className="aspect-video w-full rounded overflow-hidden bg-black shadow-md relative">
               <LiveStreamPlayer
-                streamUrl="https://go5lm6a6dawb-hls-live.5centscdn.com/translation2/d0dbe915091d400bd8ee7f27f0791303.sdp/playlist.m3u8"
+                streamUrl={article.leadMedia?.url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}
                 autoPlay={false}
                 showChyron={false}
                 className="w-full h-full"

@@ -86,8 +86,8 @@ export async function getLeadAndFeaturedArticles(): Promise<{
       .from(articles)
       .leftJoin(authors, eq(articles.authorId, authors.id))
       .where(eq(articles.status, 'PUBLISHED'))
-      .orderBy(desc(articles.publishedAt))
-      .limit(10);
+      .orderBy(desc(articles.isLeadHero), desc(articles.valueScore), desc(articles.publishedAt))
+      .limit(12);
 
     if (dbArticles.length > 0) {
       const mapped: Article[] = dbArticles.map(({ article, author }) => {
@@ -123,6 +123,9 @@ export async function getLeadAndFeaturedArticles(): Promise<{
           publishedAt: article.publishedAt ? article.publishedAt.toISOString() : new Date().toISOString(),
           updatedAt: article.updatedAt ? article.updatedAt.toISOString() : new Date().toISOString(),
           readTimeMinutes: article.readTimeMinutes || 3,
+          valueScore: article.valueScore || 75,
+          priorityTier: article.priorityTier || 2,
+          geoRegion: article.geoRegion || 'Global',
         };
       });
 
@@ -157,7 +160,7 @@ export async function getLeadAndFeaturedArticles(): Promise<{
     },
     leadMedia: {
       type: 'VIDEO',
-      url: 'https://go5lm6a6dawb-hls-live.5centscdn.com/translation2/d0dbe915091d400bd8ee7f27f0791303.sdp/playlist.m3u8',
+      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
       thumbnailUrl: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
       caption: 'Jonathan Sterling reports live from the international convention center.',
     },
@@ -420,6 +423,24 @@ export const CATEGORY_METADATA: Record<string, { id: string; name: string; descr
     description: 'Artificial intelligence innovation, NASA aerospace missions, cybersecurity, consumer hardware, and biotechnology.',
     dbCategory: 'Tech',
   },
+  africa: {
+    id: 'cat-africa',
+    name: 'Africa',
+    description: 'AfCFTA trade corridors, regional infrastructure, fintech innovations, sovereign development, and diplomatic summits across Africa.',
+    dbCategory: 'Africa',
+  },
+  asia: {
+    id: 'cat-asia',
+    name: 'Asia',
+    description: 'Asia-Pacific financial centers, semiconductor supply chains, ASEAN multilateral agreements, and cross-strait diplomacy.',
+    dbCategory: 'Asia',
+  },
+  latam: {
+    id: 'cat-latam',
+    name: 'Latin America',
+    description: 'South and Central American macroeconomic corridors, resource partnerships, Mercosur trade policies, and energy infrastructure.',
+    dbCategory: 'LatAm',
+  },
 };
 
 export async function getArticlesByCategory(categorySlug: string): Promise<CategoryPageData> {
@@ -571,7 +592,7 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Categ
           leadMedia: {
             type: idx === 0 ? 'VIDEO' : 'IMAGE',
             url: idx === 0
-              ? 'https://go5lm6a6dawb-hls-live.5centscdn.com/translation2/d0dbe915091d400bd8ee7f27f0791303.sdp/playlist.m3u8'
+              ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
               : wire.mediaUrl || '',
             thumbnailUrl: wire.mediaUrl || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80',
             caption: `${cleanTitle} — Verified via ${wire.source}.`,
@@ -617,7 +638,7 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Categ
     },
     leadMedia: {
       type: 'VIDEO',
-      url: 'https://go5lm6a6dawb-hls-live.5centscdn.com/translation2/d0dbe915091d400bd8ee7f27f0791303.sdp/playlist.m3u8',
+      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
       thumbnailUrl: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80',
       caption: `Prolific News Network live stream covering ${meta.name} developments.`,
     },

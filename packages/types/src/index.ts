@@ -62,6 +62,9 @@ export interface Article {
   publishedAt: string;
   updatedAt: string;
   readTimeMinutes: number;
+  valueScore?: number;
+  priorityTier?: number;
+  geoRegion?: string;
 }
 
 export interface LiveBlogUpdate {
@@ -104,4 +107,20 @@ export interface ProlificSubscriptionTier {
   name: string;
   priceMonthly: number;
   features: string[];
+}
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  regions: string[];
+  topics: string[];
+  frequency: 'BREAKING_ONLY' | 'DAILY_MORNING' | 'WEEKLY_ROUNDUP';
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface UserPersonalizationPreferences {
+  regions: string[];
+  topics: string[];
+  readHistory: string[];
 }
