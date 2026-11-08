@@ -8,6 +8,15 @@ interface HeroLeadPackageProps {
 }
 
 export function HeroLeadPackage({ article }: HeroLeadPackageProps) {
+  const getRelativeTime = (pubDate?: string) => {
+    if (!pubDate) return 'Just now';
+    const diffMins = Math.max(1, Math.floor((Date.now() - new Date(pubDate).getTime()) / 60000));
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
+  };
+
   return (
     <section className="bg-white border-b-2 border-gray-200 py-6 px-4">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -18,7 +27,7 @@ export function HeroLeadPackage({ article }: HeroLeadPackageProps) {
               Lead Story
             </span>
             <span className="text-xs font-bold text-gray-500 uppercase">
-              {article.category} • Updated 12m ago
+              {article.category} • Updated {getRelativeTime(article.publishedAt)}
             </span>
           </div>
 

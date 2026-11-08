@@ -4,8 +4,10 @@ import {
   syncTieredFeedsToNeonDb,
   archiveOldContent,
 } from './wire-puller';
+import { autoSyndicateHighValueArticles } from './social-distributor';
 
 export * from './wire-puller';
+export * from './social-distributor';
 
 export const inngest = new Inngest({ id: 'prolific-news-platform' });
 
@@ -14,8 +16,8 @@ export const inngest = new Inngest({ id: 'prolific-news-platform' });
  * Schedule: 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC
  * 
  * Pulls all registered feeds, deduplicates wire dispatches, auto-promotes the
- * freshest articles across all 9 categories into the published articles table,
- * and purges Vercel Edge caches.
+ * freshest articles across all categories into the published articles table,
+ * syndicates high-value articles to social channels, and purges Vercel Edge caches.
  */
 export const wireIngestCron = inngest.createFunction(
   { id: 'cron-wire-ingest', concurrency: { limit: 1 }, retries: 1 },
@@ -30,18 +32,35 @@ export const wireIngestCron = inngest.createFunction(
 );
 
 /**
- * On-Demand Tier 1 Ingestion (Breaking Desk, Politics, Markets)
- * Triggered on demand via event or admin action rather than rapid cron loops.
+ * Rapid 30-Minute Tier 1 Ingestion (Breaking Desk, Politics, Markets, Africa, Asia, LatAm)
+ * Keeps top-of-page lead stories and regional bureaus continuously fresh.
  */
 export const wireIngestTier1Cron = inngest.createFunction(
   { id: 'cron-wire-tier1', concurrency: { limit: 1 }, retries: 1 },
-  { event: 'wire/tier1.requested' },
+  { cron: '*/30 * * * *' },
   async ({ step }) => {
     const result = await step.run('sync-tier1-feeds', async () => {
       return await syncTieredFeedsToNeonDb(1);
     });
 
     return { tier: 1, processed: result.total, inserted: result.inserted, promoted: result.promoted };
+  }
+);
+
+/**
+ * Automated Multi-Platform Social Media Distribution Cron (Every 2 Hours)
+ * Syndicates top high-value stories across official @prolificnews handles
+ * (X/Twitter, Telegram, LinkedIn, Facebook, Bluesky, Threads).
+ */
+export const socialDistributionCron = inngest.createFunction(
+  { id: 'cron-social-distribution', concurrency: { limit: 1 }, retries: 1 },
+  { cron: '15 */2 * * *' },
+  async ({ step }) => {
+    const result = await step.run('auto-syndicate-social', async () => {
+      return await autoSyndicateHighValueArticles(6);
+    });
+
+    return result;
   }
 );
 
@@ -132,6 +151,7 @@ export const inngestFunctions = [
   wireIngestTier1Cron,
   wireIngestTier2Cron,
   wireIngestTier3Cron,
+  socialDistributionCron,
   contentLifecycleCron,
   liveAudioTranscribe,
   syncSearchIndex,

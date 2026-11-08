@@ -124,3 +124,31 @@ export interface UserPersonalizationPreferences {
   topics: string[];
   readHistory: string[];
 }
+
+export type SocialPlatform = 'X' | 'TELEGRAM' | 'LINKEDIN' | 'FACEBOOK' | 'BLUESKY' | 'THREADS';
+
+export interface SocialPost {
+  id: string;
+  articleId: string;
+  articleSlug: string;
+  platform: SocialPlatform;
+  handle: string;
+  postText: string;
+  hashtags: string[];
+  mediaUrl?: string;
+  targetUrl: string;
+  status: 'QUEUED' | 'PUBLISHED' | 'DISPATCHED' | 'FAILED';
+  externalPostId?: string;
+  impressionsEstimate: number;
+  publishedAt: string;
+  createdAt: string;
+}
+
+export const OFFICIAL_SOCIAL_HANDLES: Record<SocialPlatform, { handle: string; name: string; profileUrl: string }> = {
+  X: { handle: '@prolificnews', name: 'X (Twitter)', profileUrl: 'https://x.com/prolificnews' },
+  TELEGRAM: { handle: 't.me/prolificnews', name: 'Telegram Broadcast', profileUrl: 'https://t.me/prolificnews' },
+  LINKEDIN: { handle: 'Prolific News Network', name: 'LinkedIn Executive Desk', profileUrl: 'https://linkedin.com/company/prolificnews' },
+  FACEBOOK: { handle: '@prolificnewsnetwork', name: 'Facebook Live & News', profileUrl: 'https://facebook.com/prolificnewsnetwork' },
+  BLUESKY: { handle: '@prolific.news', name: 'Bluesky Wire', profileUrl: 'https://bsky.app/profile/prolific.news' },
+  THREADS: { handle: '@prolificnews', name: 'Threads', profileUrl: 'https://threads.net/@prolificnews' },
+};

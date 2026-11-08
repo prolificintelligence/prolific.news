@@ -69,3 +69,20 @@ export const newsletterSubscribers = pgTable('newsletter_subscribers', {
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
+
+export const socialPosts = pgTable('social_posts', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  articleId: varchar('article_id', { length: 64 }).notNull(),
+  articleSlug: varchar('article_slug', { length: 255 }).notNull(),
+  platform: varchar('platform', { length: 32 }).notNull(), // 'X', 'TELEGRAM', 'LINKEDIN', 'FACEBOOK', 'BLUESKY', 'THREADS'
+  handle: varchar('handle', { length: 64 }).notNull(), // e.g. '@prolificnews'
+  postText: text('post_text').notNull(),
+  hashtags: jsonb('hashtags').$type<string[]>().default([]).notNull(),
+  mediaUrl: text('media_url'),
+  targetUrl: text('target_url').notNull(),
+  status: varchar('status', { length: 32 }).default('PUBLISHED').notNull(), // 'QUEUED', 'PUBLISHED', 'DISPATCHED', 'FAILED'
+  externalPostId: varchar('external_post_id', { length: 128 }),
+  impressionsEstimate: integer('impressions_estimate').default(0).notNull(),
+  publishedAt: timestamp('published_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});

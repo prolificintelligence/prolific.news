@@ -10,11 +10,35 @@ import { PwaRegister } from '../components/PwaRegister';
 import { getActiveBreakingAlert } from '../lib/news-service';
 
 export const metadata: Metadata = {
-  title: 'Prolific News Network | Breaking News, Latest News, Video & Live Coverage',
-  description: 'Breaking news, live broadcast video streaming, investigative reporting, politics, and market coverage on Prolific News Network.',
+  metadataBase: new URL('https://prolific.news'),
+  title: {
+    default: 'Prolific News Network (PNN) | 24/7 Global Breaking News, Markets & Regional Bureaus',
+    template: '%s | Prolific News Network',
+  },
+  description:
+    '24/7 global broadcast news, algorithmic high-impact reporting, Wall Street market intelligence, and regional bureaus across U.S., World, Africa, Asia, and Latin America on Prolific News Network (PNN).',
+  keywords: [
+    'Prolific News Network',
+    'PNN',
+    'prolific.news',
+    'breaking news',
+    'live news broadcast',
+    'global markets',
+    'Africa news',
+    'Asia news',
+    'Latin America news',
+    'geopolitics',
+  ],
   manifest: '/manifest.json',
+  alternates: {
+    canonical: 'https://prolific.news',
+    types: {
+      'application/rss+xml': 'https://prolific.news/feed.xml',
+    },
+  },
   icons: {
     icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
       { url: '/favicon.ico', sizes: '32x32' },
       { url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
@@ -29,10 +53,31 @@ export const metadata: Metadata = {
     title: 'Prolific News Network',
   },
   openGraph: {
-    title: 'Prolific News Network | 24/7 Digital & Broadcast News',
-    description: 'High-density breaking news, real-time tickers, and live broadcast reports.',
+    title: 'Prolific News Network (PNN) | 24/7 Digital & Broadcast News',
+    description:
+      'High-density breaking news, real-time market tickers, regional Africa/Asia/LatAm bureaus, and 24/7 live broadcast reports.',
+    url: 'https://prolific.news',
     siteName: 'Prolific News Network',
+    images: [
+      {
+        url: 'https://prolific.news/api/og?title=Prolific%20News%20Network%20%E2%80%94%2024%2F7%20Global%20Broadcast%20%26%20Market%20Intelligence&category=GLOBAL%20NETWORK',
+        width: 1200,
+        height: 630,
+        alt: 'Prolific News Network (PNN)',
+      },
+    ],
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@prolificnews',
+    creator: '@prolificnews',
+    title: 'Prolific News Network (PNN) | 24/7 Global Broadcast & Wire',
+    description:
+      'Verified breaking news, global market intelligence, and regional reporting across 6 continents.',
+    images: [
+      'https://prolific.news/api/og?title=Prolific%20News%20Network%20%E2%80%94%2024%2F7%20Global%20Broadcast%20%26%20Market%20Intelligence&category=GLOBAL%20NETWORK',
+    ],
   },
 };
 
@@ -43,6 +88,42 @@ export default async function RootLayout({
 }) {
   const breakingAlert = await getActiveBreakingAlert();
 
+  const orgJsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'NewsMediaOrganization',
+      name: 'Prolific News Network',
+      alternateName: 'PNN',
+      url: 'https://prolific.news',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://prolific.news/images/prolific-logo-full.svg',
+        width: 340,
+        height: 76,
+      },
+      sameAs: [
+        'https://x.com/prolificnews',
+        'https://t.me/prolificnews',
+        'https://linkedin.com/company/prolificnews',
+        'https://facebook.com/prolificnews',
+        'https://bsky.app/profile/prolific.news',
+        'https://threads.net/@prolificnews',
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'Prolific News Network',
+      alternateName: 'PNN',
+      url: 'https://prolific.news',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://prolific.news/search?q={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ];
+
   return (
     <html lang="en">
       <head>
@@ -51,6 +132,12 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Prolific News Network RSS 2.0 Feed"
+          href="https://prolific.news/feed.xml"
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -59,6 +146,10 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col bg-white">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
         <PwaRegister />
         <MarketTicker />
         <BreakingBanner initialAlert={breakingAlert} />
@@ -70,63 +161,100 @@ export default async function RootLayout({
 
         {/* Global Footer */}
         <footer className="bg-[#001A2C] text-gray-300 border-t-4 border-[#002B49] py-12 px-4 mt-12">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="space-y-3">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+            <div className="lg:col-span-2 space-y-3">
               <Link href="/" className="inline-block">
                 <img
                   src="/images/prolific-logo-full.svg"
-                  alt="Prolific News Network - The World in View"
+                  alt="Prolific News Network - PNN"
                   className="h-14 w-auto object-contain drop-shadow"
                 />
               </Link>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Prolific News Network is a 24/7 multimedia digital broadcast news platform delivering breaking news, in-depth investigative reports, live video, and financial updates.
+              <p className="text-xs text-gray-400 leading-relaxed max-w-md">
+                Prolific News Network (PNN) is a 24/7 multimedia digital broadcast news platform delivering verified breaking dispatches, algorithmic high-value news curation, regional coverage across Africa, Asia, and Latin America, and global financial intelligence.
               </p>
-              <p className="text-[11px] text-gray-500">
+              <div className="flex items-center gap-2 flex-wrap pt-1">
+                <a
+                  href="https://x.com/prolificnews"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-black hover:bg-gray-900 text-white text-[11px] font-bold px-2.5 py-1 rounded border border-white/15 transition"
+                >
+                  X @prolificnews
+                </a>
+                <a
+                  href="https://t.me/prolificnews"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#0088cc] hover:opacity-90 text-white text-[11px] font-bold px-2.5 py-1 rounded transition"
+                >
+                  Telegram
+                </a>
+                <a
+                  href="https://linkedin.com/company/prolificnews"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#0A66C2] hover:opacity-90 text-white text-[11px] font-bold px-2.5 py-1 rounded transition"
+                >
+                  LinkedIn
+                </a>
+                <a
+                  href="https://bsky.app/profile/prolific.news"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#0285FF] hover:opacity-90 text-white text-[11px] font-bold px-2.5 py-1 rounded transition"
+                >
+                  Bluesky
+                </a>
+              </div>
+              <p className="text-[11px] text-gray-500 pt-1">
                 © {new Date().getFullYear()} Prolific News Network Media Inc. All rights reserved.
               </p>
             </div>
 
             <div>
               <h3 className="font-headline font-black text-xs uppercase tracking-widest text-[#FFCC00] mb-3">
-                News Sections
+                Global & Regional Desks
               </h3>
               <ul className="space-y-1.5 text-xs">
-                <li><a href="/category/politics" className="hover:text-white transition">Politics</a></li>
-                <li><a href="/category/us" className="hover:text-white transition">U.S. News</a></li>
-                <li><a href="/category/opinion" className="hover:text-white transition">Opinion</a></li>
-                <li><a href="/category/entertainment" className="hover:text-white transition">Entertainment</a></li>
-                <li><a href="/category/business" className="hover:text-white transition">Business & Markets</a></li>
+                <li><Link href="/category/politics" className="hover:text-white transition">Politics & Policy</Link></li>
+                <li><Link href="/category/us" className="hover:text-white transition">U.S. Bureau</Link></li>
+                <li><Link href="/category/world" className="hover:text-white transition">World & Geopolitics</Link></li>
+                <li><Link href="/category/africa" className="hover:text-white transition text-cyan-300">Africa Bureau</Link></li>
+                <li><Link href="/category/asia" className="hover:text-white transition text-cyan-300">Asia-Pacific Bureau</Link></li>
+                <li><Link href="/category/latam" className="hover:text-white transition text-cyan-300">Latin America Bureau</Link></li>
+                <li><Link href="/category/business" className="hover:text-white transition">Business & Markets</Link></li>
+                <li><Link href="/category/tech" className="hover:text-white transition">Technology & AI</Link></li>
               </ul>
             </div>
 
             <div>
               <h3 className="font-headline font-black text-xs uppercase tracking-widest text-[#FFCC00] mb-3">
-                Shows & Features
+                Broadcast & Features
               </h3>
               <ul className="space-y-1.5 text-xs">
-                <li><a href="/watch" className="hover:text-white transition">Prolific Live Broadcast</a></li>
-                <li><a href="/plus" className="hover:text-white transition">Prolific Plus (Commercial-Free)</a></li>
-                <li><a href="/podcasts" className="hover:text-white transition">Audio Briefings & Podcasts</a></li>
-                <li><a href="/newsletters" className="hover:text-white transition">Daily Newsletters</a></li>
+                <li><Link href="/watch" className="hover:text-white transition">24/7 Live Broadcast</Link></li>
+                <li><Link href="/for-you" className="hover:text-white transition">For You (Personalized Digest)</Link></li>
+                <li><Link href="/search" className="hover:text-white transition">Search News Index</Link></li>
+                <li><Link href="/archive" className="hover:text-white transition">Newsroom Archive</Link></li>
+                <li><Link href="/plus" className="hover:text-white transition">Prolific Plus (Ad-Free)</Link></li>
+                <li><Link href="/advertise" className="hover:text-white transition text-[#FFCC00] font-semibold">Advertise & Media Kit</Link></li>
               </ul>
             </div>
 
             <div>
               <h3 className="font-headline font-black text-xs uppercase tracking-widest text-[#FFCC00] mb-3">
-                Apps & Alerts
+                Syndication & Corporate
               </h3>
-              <p className="text-xs text-gray-400 mb-3">
-                Never miss a breaking story. Download the Prolific News Network app or enable desktop push notifications.
-              </p>
-              <div className="flex gap-2">
-                <button className="bg-[#002B49] hover:bg-[#003B66] text-white text-xs font-bold px-3 py-1.5 rounded transition border border-white/20">
-                  iOS App
-                </button>
-                <button className="bg-[#002B49] hover:bg-[#003B66] text-white text-xs font-bold px-3 py-1.5 rounded transition border border-white/20">
-                  Android App
-                </button>
-              </div>
+              <ul className="space-y-1.5 text-xs">
+                <li><a href="/feed.xml" className="hover:text-white transition">RSS 2.0 Syndication Feed</a></li>
+                <li><a href="/news-sitemap.xml" className="hover:text-white transition">Google News Sitemap</a></li>
+                <li><a href="/sitemap.xml" className="hover:text-white transition">XML Site Index</a></li>
+                <li><Link href="/about" className="hover:text-white transition">About Prolific News</Link></li>
+                <li><Link href="/contact" className="hover:text-white transition">Contact & Press Tips</Link></li>
+                <li><Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-white transition">Terms of Service</Link></li>
+              </ul>
             </div>
           </div>
         </footer>

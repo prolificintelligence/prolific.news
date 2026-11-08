@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { createDb, wireItems, articles, breakingAlerts, lt, eq, sql, desc, and, or, ilike } from '@prolific/db';
+import { autoSyndicateHighValueArticles, syndicateArticleToSocials } from './social-distributor';
 
 export interface WireArticle {
   id: string;
@@ -19,61 +20,120 @@ const CATEGORY_IMAGES: Record<string, string[]> = {
     'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1575320181282-9afab399332c?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1555848962-6e79363ec58f?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1523292562811-8fa7962a78c8?auto=format&fit=crop&w=1200&q=80',
   ],
   US: [
     'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1485738422979-f5c462d49f74?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1508873696983-2df5293cb395?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1534430480872-3498386e7856?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1518391846015-55a9cc003b25?auto=format&fit=crop&w=1200&q=80',
   ],
   Opinion: [
     'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80',
   ],
   Entertainment: [
     'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?auto=format&fit=crop&w=1200&q=80',
   ],
   Sports: [
     'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80',
   ],
   Lifestyle: [
     'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80',
   ],
   Business: [
     'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=1200&q=80',
   ],
   World: [
     'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1532375810709-75b1da00537c?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1200&q=80',
   ],
   Tech: [
     'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80',
   ],
   Africa: [
     'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1611348586804-61bf6c080437?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=1200&q=80',
   ],
   Asia: [
     'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1535139262971-c51845709a48?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1536599018102-9f803c140fc1?auto=format&fit=crop&w=1200&q=80',
   ],
   LatAm: [
     'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1518638150340-f706e86654de?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1589553416260-f586c8f1514f?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1516306580123-e6e52b1b7b5f?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1544989164-31dc3c645987?auto=format&fit=crop&w=1200&q=80',
   ],
   General: [
     'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1200&q=80',
   ],
 };
 
-function getRandomImage(category: string, seed: number): string {
+const KEYWORD_IMAGE_POOL: Array<{ keywords: string[]; url: string }> = [
+  { keywords: ['oil', 'crude', 'opec', 'petroleum', 'pipeline', 'refinery'], url: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1200&q=80' },
+  { keywords: ['solar', 'renewable', 'wind', 'grid', 'electricity', 'power plant'], url: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1200&q=80' },
+  { keywords: ['chip', 'semiconductor', 'nvidia', 'ai ', 'artificial intelligence', 'quantum'], url: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=80' },
+  { keywords: ['space', 'nasa', 'rocket', 'orbit', 'satellite', 'moon', 'mars'], url: 'https://images.unsplash.com/photo-1517976487468-f20514c44f53?auto=format&fit=crop&w=1200&q=80' },
+  { keywords: ['court', 'supreme', 'judge', 'lawsuit', 'trial', 'justice', 'legal'], url: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80' },
+  { keywords: ['military', 'pentagon', 'navy', 'defense', 'missile', 'nato', 'troops', 'army'], url: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=1200&q=80' },
+  { keywords: ['shipping', 'maritime', 'port', 'cargo', 'tariff', 'export', 'supply chain'], url: 'https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=1200&q=80' },
+  { keywords: ['bank', 'fed ', 'federal reserve', 'inflation', 'interest rate', 'treasury', 'bond'], url: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80' },
+  { keywords: ['bitcoin', 'crypto', 'blockchain', 'digital currency'], url: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&w=1200&q=80' },
+  { keywords: ['hospital', 'medical', 'vaccine', 'health', 'fda', 'clinical', 'virus'], url: 'https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?auto=format&fit=crop&w=1200&q=80' },
+  { keywords: ['airline', 'flight', 'aviation', 'airport', 'boeing', 'airbus'], url: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1200&q=80' },
+];
+
+function getRandomImage(category: string, seed: number, title = ''): string {
+  if (title) {
+    const lower = title.toLowerCase();
+    for (const entry of KEYWORD_IMAGE_POOL) {
+      if (entry.keywords.some((kw) => lower.includes(kw))) {
+        return entry.url;
+      }
+    }
+  }
   const list = CATEGORY_IMAGES[category] || CATEGORY_IMAGES.General;
   return list[seed % list.length];
 }
@@ -319,7 +379,7 @@ export async function fetchLiveRssFeed(
       let mediaUrl = extractMediaUrl(block);
       if (!mediaUrl) {
         const seed = Math.abs(title.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0));
-        mediaUrl = getRandomImage(category, seed);
+        mediaUrl = getRandomImage(category, seed, title);
       }
 
       const idHash = crypto.createHash('md5').update(`${title}|${link}`).digest('hex').slice(0, 16);
@@ -356,24 +416,30 @@ export interface FeedConfig {
 
 export const FEED_REGISTRY: FeedConfig[] = [
   // Tier 1: High Velocity Breaking, Politics, Business & Emerging Global Hubs
-  { url: 'https://moxie.foxnews.com/google-publisher/politics.xml', category: 'Politics', source: 'Fox News Politics', tier: 1 },
   { url: 'https://news.google.com/rss/search?q=source:%22Associated%20Press%22+politics&hl=en-US&gl=US&ceid=US:en', category: 'Politics', source: 'Associated Press', tier: 1 },
+  { url: 'https://moxie.foxnews.com/google-publisher/politics.xml', category: 'Politics', source: 'Fox News Politics', tier: 1 },
+  { url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', category: 'Politics', source: 'BBC North America', tier: 1 },
   { url: 'https://moxie.foxbusiness.com/google-publisher/markets.xml', category: 'Business', source: 'Fox Business', tier: 1 },
-  { url: 'https://moxie.foxbusiness.com/google-publisher/economy.xml', category: 'Business', source: 'Fox Business Economy', tier: 1 },
+  { url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664', category: 'Business', source: 'CNBC Finance', tier: 1 },
   { url: 'https://news.google.com/rss/search?q=source:%22Reuters%22+business&hl=en-US&gl=US&ceid=US:en', category: 'Business', source: 'Reuters', tier: 1 },
   { url: 'https://moxie.foxnews.com/google-publisher/latest.xml', category: 'General', source: 'Prolific Wire Desk', tier: 1 },
 
   // Tier 1 Regional: Africa, Asia & Latin America Primary Wires
   { url: 'https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf', category: 'Africa', source: 'AllAfrica Global', tier: 1 },
+  { url: 'https://feeds.bbci.co.uk/news/world/africa/rss.xml', category: 'Africa', source: 'BBC Africa Desk', tier: 1 },
   { url: 'https://news.google.com/rss/search?q=when:24h+Africa+business+OR+politics&hl=en&gl=US&ceid=US:en', category: 'Africa', source: 'Africa Wire Desk', tier: 1 },
-  { url: 'https://asia.nikkei.com/rss/feed/nar', category: 'Asia', source: 'Nikkei Asia', tier: 1 },
   { url: 'https://www.scmp.com/rss/91/feed', category: 'Asia', source: 'South China Morning Post', tier: 1 },
+  { url: 'https://feeds.bbci.co.uk/news/world/asia/rss.xml', category: 'Asia', source: 'BBC Asia Desk', tier: 1 },
+  { url: 'https://asia.nikkei.com/rss/feed/nar', category: 'Asia', source: 'Nikkei Asia', tier: 1 },
   { url: 'https://news.google.com/rss/search?q=when:24h+Asia+markets+OR+diplomacy&hl=en&gl=US&ceid=US:en', category: 'Asia', source: 'Asia-Pacific Wire', tier: 1 },
   { url: 'https://en.mercopress.com/rss', category: 'LatAm', source: 'MercoPress', tier: 1 },
+  { url: 'https://feeds.bbci.co.uk/news/world/latin_america/rss.xml', category: 'LatAm', source: 'BBC Latin America', tier: 1 },
   { url: 'https://news.google.com/rss/search?q=when:24h+Latin+America+markets+OR+governance&hl=en&gl=US&ceid=US:en', category: 'LatAm', source: 'Latin America Wire', tier: 1 },
 
-  // Tier 2: Global & Core (Cadence: 5 min) - U.S., World, Sports, Entertainment & Regional Bureaus
+  // Tier 2: Global & Core (Cadence: 30 min) - U.S., World, Sports, Entertainment & Regional Bureaus
   { url: 'https://moxie.foxnews.com/google-publisher/us.xml', category: 'US', source: 'Fox News U.S.', tier: 2 },
+  { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'World', source: 'BBC World Service', tier: 2 },
+  { url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'World', source: 'Al Jazeera Global', tier: 2 },
   { url: 'https://moxie.foxnews.com/google-publisher/world.xml', category: 'World', source: 'Fox World', tier: 2 },
   { url: 'https://news.google.com/rss/search?q=source:%22Reuters%22+world&hl=en-US&gl=US&ceid=US:en', category: 'World', source: 'Reuters', tier: 2 },
   { url: 'https://news.un.org/feed/subscribe/en/news/all/rss.xml', category: 'World', source: 'UN News', tier: 2 },
@@ -387,8 +453,9 @@ export const FEED_REGISTRY: FeedConfig[] = [
   // Tier 3: Thought Leadership, Tech, Science, Opinion, Lifestyle
   { url: 'https://moxie.foxnews.com/google-publisher/opinion.xml', category: 'Opinion', source: 'Fox News Opinion', tier: 3 },
   { url: 'https://theconversation.com/global/articles.atom', category: 'Opinion', source: 'The Conversation', tier: 3 },
+  { url: 'https://techcrunch.com/feed/', category: 'Tech', source: 'TechCrunch', tier: 3 },
+  { url: 'https://feeds.arstechnica.com/arstechnica/index', category: 'Tech', source: 'Ars Technica', tier: 3 },
   { url: 'https://moxie.foxnews.com/google-publisher/tech.xml', category: 'Tech', source: 'Fox Tech', tier: 3 },
-  { url: 'https://moxie.foxnews.com/google-publisher/science.xml', category: 'Tech', source: 'Fox Science', tier: 3 },
   { url: 'https://www.nasa.gov/news-release/feed/', category: 'Tech', source: 'NASA', tier: 3 },
   { url: 'https://moxie.foxnews.com/google-publisher/lifestyle.xml', category: 'Lifestyle', source: 'Fox Lifestyle', tier: 3 },
   { url: 'https://moxie.foxnews.com/google-publisher/travel.xml', category: 'Lifestyle', source: 'Fox Travel', tier: 3 },
@@ -644,7 +711,10 @@ export async function syncTieredFeedsToNeonDb(tier: 1 | 2 | 3): Promise<{ insert
   let promoted = 0;
   try {
     ({ promoted } = await autoPromoteFreshWireItems(tier === 1 ? 4 : 2));
-    if (promoted > 0) await revalidateEdge();
+    if (promoted > 0) {
+      await autoSyndicateHighValueArticles(3).catch((e) => console.warn('[SocialAuto] Tier sync warn:', e));
+      await revalidateEdge();
+    }
   } catch (err) {
     console.error('[AutoPromote] failed:', err);
   }
@@ -670,7 +740,10 @@ export async function syncWireFeedsToNeonDb(): Promise<{ inserted: number; total
     const promoResult = await autoPromoteFreshWireItems(3);
     promoted = promoResult.promoted;
     console.log(`[Wire] Auto-promoted ${promoted} fresh articles across categories:`, promoResult.byCategory);
-    if (promoted > 0) await revalidateEdge();
+    if (promoted > 0) {
+      await autoSyndicateHighValueArticles(5).catch((e) => console.warn('[SocialAuto] Full sync warn:', e));
+      await revalidateEdge();
+    }
   } catch (err) {
     console.error('[Wire] Auto-promote step failed:', err);
   }
@@ -788,6 +861,19 @@ export async function promoteWireItemToArticle(
     await db.update(articles).set({ isLeadHero: false });
     await db.update(articles).set({ isLeadHero: true }).where(eq(articles.id, articleId));
   }
+
+  await syndicateArticleToSocials({
+    id: articleId,
+    slug,
+    title: title.toUpperCase(),
+    subtitle: summary,
+    category: item.category,
+    geoRegion,
+    valueScore,
+    isBreaking: options.isBreaking ?? (valueScore >= 85),
+    leadMediaUrl: item.mediaUrl,
+    keyDevelopments,
+  }).catch((e) => console.warn('[SocialAuto] Promote warn:', e));
 
   await revalidateEdge();
 
