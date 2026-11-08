@@ -38,7 +38,7 @@ export default async function ForYouPage() {
       </div>
 
       {/* Interactive Personalized Engine Widget */}
-      <PersonalizedNewsWidget articles={allArticles} />
+      <PersonalizedNewsWidget articles={allArticles} mode="inline" />
 
       {/* Regional Focus Highlights (Africa, Asia, Latin America) */}
       <div className="space-y-4 pt-4">

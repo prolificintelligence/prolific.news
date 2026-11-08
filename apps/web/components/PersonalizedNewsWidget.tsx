@@ -2,11 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Sparkles, Mail, Check, Bell, Flame, ChevronRight, SlidersHorizontal } from 'lucide-react';
+import {
+  Sparkles,
+  Mail,
+  Check,
+  ChevronRight,
+  SlidersHorizontal,
+  X,
+  ArrowRight,
+} from 'lucide-react';
 import { Article } from '@prolific/types';
 
 interface PersonalizedNewsWidgetProps {
   articles: Article[];
+  mode?: 'modal' | 'inline';
 }
 
 const AVAILABLE_TOPICS = [
@@ -21,15 +30,22 @@ const AVAILABLE_TOPICS = [
   'Opinion',
 ];
 
-export function PersonalizedNewsWidget({ articles }: PersonalizedNewsWidgetProps) {
-  const [selectedTopics, setSelectedTopics] = useState<string[]>(['Politics', 'Business', 'Tech']);
+export function PersonalizedNewsWidget({
+  articles,
+  mode = 'modal',
+}: PersonalizedNewsWidgetProps) {
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([
+    'Politics',
+    'Business',
+    'Tech',
+  ]);
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [subscribeStatus, setSubscribeStatus] = useState<string | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [attentionPulse, setAttentionPulse] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
     try {
       const saved = localStorage.getItem('prolific_pref_topics');
       if (saved) {
@@ -43,10 +59,34 @@ export function PersonalizedNewsWidget({ articles }: PersonalizedNewsWidgetProps
     }
   }, []);
 
+  // Periodic attention animation every 5 seconds for the slim 1-line bar
+  useEffect(() => {
+    if (mode !== 'modal') return;
+    const interval = setInterval(() => {
+      setAttentionPulse(true);
+      setTimeout(() => setAttentionPulse(false), 1600);
+    }, 5500);
+    return () => clearInterval(interval);
+  }, [mode]);
+
+  // Listen for global 'open-personalized-modal' events triggered by TopHeader "For You" button
+  useEffect(() => {
+    const handleOpen = () => setIsModalOpen(true);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsModalOpen(false);
+    };
+    window.addEventListener('open-personalized-modal', handleOpen);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('open-personalized-modal', handleOpen);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const toggleTopic = (topic: string) => {
     let next: string[];
     if (selectedTopics.includes(topic)) {
-      if (selectedTopics.length === 1) return; // Keep at least one
+      if (selectedTopics.length === 1) return;
       next = selectedTopics.filter((t) => t !== topic);
     } else {
       next = [...selectedTopics, topic];
@@ -73,7 +113,9 @@ export function PersonalizedNewsWidget({ articles }: PersonalizedNewsWidgetProps
         body: JSON.stringify({
           email,
           topics: selectedTopics,
-          regions: selectedTopics.filter((t) => ['Africa', 'Asia', 'LatAm'].includes(t)),
+          regions: selectedTopics.filter((t) =>
+            ['Africa', 'Asia', 'LatAm'].includes(t)
+          ),
           frequency: 'DAILY_MORNING',
         }),
       });
@@ -91,7 +133,6 @@ export function PersonalizedNewsWidget({ articles }: PersonalizedNewsWidgetProps
     }
   };
 
-  // Filter and score articles based on selected topics
   const filteredArticles = articles
     .filter((a) => {
       const cat = (a.category || '').toLowerCase();
@@ -106,13 +147,19 @@ export function PersonalizedNewsWidget({ articles }: PersonalizedNewsWidgetProps
     })
     .slice(0, 4);
 
-  const displayList = filteredArticles.length > 0 ? filteredArticles : articles.slice(0, 4);
+  const displayList =
+    filteredArticles.length > 0 ? filteredArticles : articles.slice(0, 4);
 
-  return (
-    <section className="bg-gradient-to-br from-[#001F35] via-[#002B49] to-[#001524] text-white rounded-lg p-6 my-8 border-2 border-[#004A80] shadow-xl">
+  const renderCuratedContent = (isInsideModal: boolean) => (
+    <div
+      className={`bg-gradient-to-br from-[#001F35] via-[#002B49] to-[#001524] text-white rounded-xl p-6 border-2 border-[#004A80] shadow-2xl ${
+        isInsideModal ? 'w-full max-w-4xl max-h-[90vh] overflow-y-auto relative' : 'my-6'
+      }`}
+      onClick={(e) => e.stopPropagation()}
+    >
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#003B66]">
-        <div className="space-y-1">
+        <div className="space-y-1 pr-8">
           <div className="flex items-center gap-2">
             <span className="bg-[#FFCC00] text-[#002B49] text-[10px] font-black uppercase px-2 py-0.5 rounded flex items-center gap-1 shadow">
               <Sparkles className="w-3 h-3 text-[#002B49]" />
@@ -130,14 +177,27 @@ export function PersonalizedNewsWidget({ articles }: PersonalizedNewsWidgetProps
           </p>
         </div>
 
-        <Link
-          href="/for-you"
-          className="self-start md:self-auto flex items-center gap-1.5 text-xs font-headline font-bold text-[#FFCC00] hover:text-white uppercase tracking-wider bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded transition"
-        >
-          <SlidersHorizontal className="w-3.5 h-3.5" />
-          <span>Full Preferences Hub</span>
-          <ChevronRight className="w-3.5 h-3.5" />
-        </Link>
+        <div className="flex items-center gap-2 self-start md:self-auto">
+          <Link
+            href="/for-you"
+            onClick={() => setIsModalOpen(false)}
+            className="flex items-center gap-1.5 text-xs font-headline font-bold text-[#FFCC00] hover:text-white uppercase tracking-wider bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded transition"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span>Full Hub</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+
+          {isInsideModal && (
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-[#CC0000] text-white transition"
+              title="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Interactive Topic Pills */}
@@ -165,11 +225,12 @@ export function PersonalizedNewsWidget({ articles }: PersonalizedNewsWidgetProps
       </div>
 
       {/* Dynamic News Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
         {displayList.map((article) => (
           <Link
             key={article.id}
             href={`/article/${article.slug}`}
+            onClick={() => setIsModalOpen(false)}
             className="group bg-[#001828]/80 hover:bg-[#001828] border border-[#003B66] hover:border-[#FFCC00] rounded p-3.5 flex flex-col justify-between transition space-y-3"
           >
             <div className="space-y-2">
@@ -195,7 +256,7 @@ export function PersonalizedNewsWidget({ articles }: PersonalizedNewsWidgetProps
       </div>
 
       {/* Delivery Signup Callout */}
-      <div className="mt-6 pt-5 border-t border-[#003B66] flex flex-col md:flex-row items-center justify-between gap-4 bg-black/30 p-4 rounded">
+      <div className="mt-5 pt-4 border-t border-[#003B66] flex flex-col md:flex-row items-center justify-between gap-4 bg-black/30 p-4 rounded">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-[#CC0000] flex items-center justify-center shrink-0 shadow">
             <Mail className="w-5 h-5 text-white" />
@@ -234,6 +295,83 @@ export function PersonalizedNewsWidget({ articles }: PersonalizedNewsWidgetProps
           {subscribeStatus}
         </div>
       )}
-    </section>
+    </div>
+  );
+
+  if (mode === 'inline') {
+    return renderCuratedContent(false);
+  }
+
+  return (
+    <>
+      {/* Slim 1-Line Periodically Animated Trigger Bar (Zero Landing Page Distortion) */}
+      <div className="w-full bg-gradient-to-r from-[#001A2C] via-[#002B49] to-[#001A2C] border-b border-[#003B66] overflow-hidden relative">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className={`group flex-1 flex items-center justify-between gap-3 text-left transition-all duration-500 rounded px-2.5 py-1 ${
+              attentionPulse
+                ? 'bg-[#FFCC00]/15 ring-1 ring-[#FFCC00] shadow-[0_0_18px_rgba(255,204,0,0.35)] scale-[1.005]'
+                : 'hover:bg-white/5'
+            }`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-headline font-black uppercase tracking-wider shrink-0 transition-transform duration-500 ${
+                  attentionPulse
+                    ? 'bg-[#CC0000] text-white scale-105 shadow'
+                    : 'bg-[#FFCC00] text-[#002B49]'
+                }`}
+              >
+                <Sparkles className="w-3 h-3 animate-spin" style={{ animationDuration: '4s' }} />
+                <span>For Your Desk</span>
+              </span>
+
+              <span className="font-headline font-bold text-xs sm:text-sm text-white uppercase tracking-wide truncate group-hover:text-[#FFCC00] transition">
+                Curate Your Desk & Morning Briefing
+              </span>
+
+              <div className="hidden md:flex items-center gap-1.5 ml-1">
+                {selectedTopics.slice(0, 4).map((t) => (
+                  <span
+                    key={t}
+                    className="text-[10px] font-headline font-bold uppercase px-2 py-0.5 rounded bg-white/10 text-cyan-200 border border-white/10"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span
+                className={`text-[11px] font-headline font-black uppercase tracking-wider px-2.5 py-0.5 rounded flex items-center gap-1 transition-all duration-500 ${
+                  attentionPulse
+                    ? 'bg-[#FFCC00] text-[#002B49]'
+                    : 'bg-[#CC0000] text-white group-hover:bg-[#FFCC00] group-hover:text-[#002B49]'
+                }`}
+              >
+                <span>Personalize Feed</span>
+                <ArrowRight
+                  className={`w-3 h-3 transition-transform duration-300 ${
+                    attentionPulse ? 'translate-x-1' : 'group-hover:translate-x-0.5'
+                  }`}
+                />
+              </span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Modal Overlay */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setIsModalOpen(false)}
+        >
+          {renderCuratedContent(true)}
+        </div>
+      )}
+    </>
   );
 }

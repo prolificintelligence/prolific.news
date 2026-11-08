@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { Search, User, Radio, Flame, Sparkles } from 'lucide-react';
 
 const NAV_LINKS = [
@@ -19,11 +22,23 @@ const NAV_LINKS = [
 ];
 
 export function TopHeader() {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleOpenForYou = (e: React.MouseEvent) => {
+    if (pathname === '/') {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('open-personalized-modal'));
+    } else {
+      router.push('/for-you');
+    }
+  };
+
   return (
     <header className="w-full bg-[#002B49] text-white border-b border-[#001F35] shadow-sm sticky top-0 z-50">
       {/* Upper Main Brand Bar */}
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-        {/* Brand Logo */}
+        {/* Brand Logo (Pure Typographic Broadcast Lockup — Zero PNN Prefix) */}
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2 group">
             <img
@@ -36,9 +51,10 @@ export function TopHeader() {
 
         {/* Action Controls & Live Video Link */}
         <div className="flex items-center gap-2.5 sm:gap-3">
-          {/* For You Link with Sparkle */}
+          {/* For You Button (Opens Modal on Homepage, or /for-you Hub) */}
           <Link
             href="/for-you"
+            onClick={handleOpenForYou}
             className="flex items-center gap-1.5 bg-[#003B66] hover:bg-[#004A80] border border-[#005599] text-[#FFCC00] px-3 py-1.5 rounded font-headline font-bold text-xs tracking-wider uppercase transition shadow-sm"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#FFCC00] animate-pulse" />
@@ -72,9 +88,10 @@ export function TopHeader() {
             <Search className="w-5 h-5" />
           </Link>
 
-          {/* User Account / Personalization Preferences */}
+          {/* User Account / Personalization Modal Trigger */}
           <Link
             href="/for-you"
+            onClick={handleOpenForYou}
             className="p-1.5 text-gray-300 hover:text-white hover:bg-white/10 rounded transition"
             title="Personalized News Preferences"
           >

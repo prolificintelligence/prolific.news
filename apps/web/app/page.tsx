@@ -53,10 +53,8 @@ export default async function HomePage() {
       {/* Super Hero Lead Package */}
       <HeroLeadPackage article={leadArticle} />
 
-      {/* Personalized News "Delivered To You" Section */}
-      <div className="max-w-7xl mx-auto px-4 w-full">
-        <PersonalizedNewsWidget articles={allArticles} />
-      </div>
+      {/* Slim 1-Line Animated Personalization Trigger Bar + Modal */}
+      <PersonalizedNewsWidget articles={allArticles} mode="modal" />
 
       {/* 3-Column High-Density Grid */}
       <ThreeColumnLayout

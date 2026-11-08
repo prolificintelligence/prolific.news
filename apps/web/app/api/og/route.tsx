@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     searchParams.get('title') ||
     'Prolific News Network — 24/7 Global Broadcast & Market Intelligence';
   const category = (searchParams.get('category') || 'BREAKING DISPATCH').toUpperCase();
-  const author = searchParams.get('author') || 'PNN Global News Desk';
+  const author = searchParams.get('author') || 'Prolific Global News Desk';
 
   return new ImageResponse(
     (
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
           borderBottom: '14px solid #CC0000',
         }}
       >
-        {/* Top Bar: PNN Broadcast Crest + Category Pill */}
+        {/* Top Bar: Pure Typographic PROLIFIC + NEWS NETWORK Lockup + Category Pill */}
         <div
           style={{
             display: 'flex',
@@ -37,44 +37,37 @@ export async function GET(request: Request) {
             width: '100%',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span
+              style={{
+                fontSize: '38px',
+                fontWeight: 900,
+                letterSpacing: '4px',
+                color: '#FFFFFF',
+                lineHeight: 1.05,
+              }}
+            >
+              PROLIFIC
+            </span>
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
                 backgroundColor: '#CC0000',
-                border: '2px solid #FFCC00',
-                borderRadius: '10px',
-                padding: '10px 18px',
-                fontWeight: 900,
-                fontSize: '30px',
-                letterSpacing: '2px',
-                color: '#FFFFFF',
+                borderTop: '3px solid #FFCC00',
+                padding: '4px 12px',
+                marginTop: '4px',
               }}
             >
-              PNN
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span
                 style={{
-                  fontSize: '26px',
+                  fontSize: '13px',
                   fontWeight: 900,
-                  letterSpacing: '3px',
+                  letterSpacing: '5px',
                   color: '#FFFFFF',
                 }}
               >
-                PROLIFIC NEWS
-              </span>
-              <span
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  letterSpacing: '4px',
-                  color: '#FFCC00',
-                }}
-              >
-                GLOBAL BROADCAST NETWORK
+                NEWS NETWORK
               </span>
             </div>
           </div>

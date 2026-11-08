@@ -1,116 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 72" width="360" height="72" role="img" aria-label="PNN - Prolific News Network">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 206 62" fill="none">
   <defs>
-    <linearGradient id="pnnGold" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="crimsonBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E60000" />
+      <stop offset="100%" stop-color="#A80000" />
+    </linearGradient>
+    <linearGradient id="goldBar" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#FFE047" />
-      <stop offset="50%" stop-color="#FFCC00" />
-      <stop offset="100%" stop-color="#D49B00" />
+      <stop offset="100%" stop-color="#F59E0B" />
     </linearGradient>
-    <linearGradient id="pnnCrimson" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FF1E27" />
-      <stop offset="100%" stop-color="#B80008" />
-    </linearGradient>
-    <linearGradient id="pnnNavy" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#003359" />
-      <stop offset="100%" stop-color="#001526" />
-    </linearGradient>
-    <filter id="pnnDrop" x="-12%" y="-12%" width="124%" height="124%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.45" />
+    <filter id="textGlow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1" flood-color="#000000" flood-opacity="0.35" />
     </filter>
   </defs>
 
-  <!-- LEFT EMBLEM: PNN BROADCAST MONOGRAM CREST (Pure Vector Paths - Zero Font Dependency) -->
-  <g transform="translate(6, 6)" filter="url(#pnnDrop)">
-    <!-- Outer Gold Bevel Frame -->
-    <rect x="0" y="0" width="68" height="60" rx="9" fill="url(#pnnGold)" />
-    <!-- Inner Deep Navy Broadcast Studio Core -->
-    <rect x="2.5" y="2.5" width="63" height="55" rx="7" fill="url(#pnnNavy)" />
-
-    <!-- Subtle Global Broadcast Grid Arcs -->
-    <ellipse cx="34" cy="30" rx="26" ry="20" fill="none" stroke="#004C80" stroke-width="0.9" stroke-dasharray="3 2" opacity="0.65" />
-    <path d="M 8 18 Q 34 26 60 18" fill="none" stroke="#004C80" stroke-width="0.8" opacity="0.5" />
-    <path d="M 8 42 Q 34 34 60 42" fill="none" stroke="#004C80" stroke-width="0.8" opacity="0.5" />
-
-    <!-- Top Crimson Broadcast Signal Bar -->
-    <rect x="10" y="6.5" width="48" height="4" rx="2" fill="url(#pnnCrimson)" />
-    <!-- Live Signal Beacon Dot -->
-    <circle cx="58" cy="8.5" r="2.5" fill="#FFE047" />
-
-    <!-- Pure Vector "PNN" Interlocking Monogram -->
-    <!-- Letter P (x: 8..23, y: 16..42) -->
-    <path d="M 8.5 16 H 17.5 C 21.2 16 23.5 18.2 23.5 21.8 C 23.5 25.4 21.2 27.6 17.5 27.6 H 13.5 V 36 H 8.5 V 16 Z M 13.5 20.2 V 23.6 H 16.8 C 18.2 23.6 19 22.9 19 21.9 C 19 20.9 18.2 20.2 16.8 20.2 H 13.5 Z" fill="#FFFFFF" />
-    <!-- First Letter N (x: 25.5..41.5, y: 16..36) -->
-    <path d="M 25.5 16 H 30.2 L 36.8 27.4 V 16 H 41.3 V 36 H 36.6 L 30.0 24.6 V 36 H 25.5 V 16 Z" fill="url(#pnnGold)" />
-    <!-- Second Letter N (x: 43.5..59.5, y: 16..36) -->
-    <path d="M 43.5 16 H 48.2 L 54.8 27.4 V 16 H 59.3 V 36 H 54.6 L 48.0 24.6 V 36 H 43.5 V 16 Z" fill="url(#pnnGold)" />
-
-    <!-- Bottom Micro-Banner inside Crest: 24/7 LIVE -->
-    <rect x="9" y="41" width="50" height="11" rx="3" fill="#00101D" stroke="#00487C" stroke-width="0.8" />
-    <circle cx="15.5" cy="46.5" r="2.2" fill="#FF1E27" />
-    <text x="37" y="49.5" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif" font-weight="900" font-size="7.5" letter-spacing="1.2" fill="#FFE047" text-anchor="middle">24/7 LIVE</text>
+  <!-- TIER 1: Pure Vector "PROLIFIC" Monumental Display Wordmark (x=10..195, y=5..35) -->
+  <g fill="#FFFFFF" fill-rule="evenodd" filter="url(#textGlow)">
+    <!-- P -->
+    <path d="M10 5 H25 C29.5 5 32 7.5 32 12 V16 C32 20.5 29.5 23 25 23 H16.5 V35 H10 Z M16.5 10.5 V17.5 H24 C25.2 17.5 25.8 16.8 25.8 15.5 V12.5 C25.8 11.2 25.2 10.5 24 10.5 Z" />
+    <!-- R -->
+    <path d="M38 5 H53 C57.5 5 60 7.5 60 12 V15.5 C60 19.2 58 21.5 54.5 22.3 L61 35 H53.8 L48 23 H44.5 V35 H38 Z M44.5 10.5 V17.5 H52 C53.2 17.5 53.8 16.8 53.8 15.5 V12.5 C53.8 11.2 53.2 10.5 52 10.5 Z" />
+    <!-- O -->
+    <path d="M73 5 H83 C87.5 5 90 7.5 90 12 V28 C90 32.5 87.5 35 83 35 H73 C68.5 35 66 32.5 66 28 V12 C66 7.5 68.5 5 73 5 Z M72.5 12.5 V27.5 C72.5 28.8 73.2 29.5 74.5 29.5 H81.5 C82.8 29.5 83.5 28.8 83.5 27.5 V12.5 C83.5 11.2 82.8 10.5 81.5 10.5 H74.5 C73.2 10.5 72.5 11.2 72.5 12.5 Z" />
+    <!-- L -->
+    <path d="M96 5 H102.5 V29.2 H116 V35 H96 Z" />
+    <!-- I -->
+    <path d="M121 5 H127.5 V35 H121 Z" />
+    <!-- F -->
+    <path d="M134 5 H154 V10.8 H140.5 V17.2 H151.5 V22.8 H140.5 V35 H134 Z" />
+    <!-- I -->
+    <path d="M159 5 H165.5 V35 H159 Z" />
+    <!-- C -->
+    <path d="M179 5 H188 C192.5 5 195 7.5 195 12 V15.5 H188.5 V12.5 C188.5 11.2 187.8 10.5 186.5 10.5 H180.5 C179.2 10.5 178.5 11.2 178.5 12.5 V27.5 C178.5 28.8 179.2 29.5 180.5 29.5 H186.5 C187.8 29.5 188.5 28.8 188.5 27.5 V24 H195 V28 C195 32.5 192.5 35 188 35 H179 C174.5 35 172 32.5 172 28 V12 C172 7.5 174.5 5 179 5 Z" />
   </g>
 
-  <!-- RIGHT LOCKUP: STACKED 2-TIER BROADCAST WORDMARK (Physically Impossible to Overlap) -->
-  <!-- TIER 1 (TOP): PROLIFIC -->
+  <!-- TIER 2: Crimson & Gold Lower-Third Broadcast Bar ("NEWS NETWORK") (y=39..57) -->
+  <!-- Gold Upper Rule -->
+  <rect x="10" y="39" width="185" height="2.5" fill="url(#goldBar)" />
+
+  <!-- Crimson Lower-Third Bar -->
+  <rect x="10" y="41.5" width="185" height="15.5" rx="1.5" fill="url(#crimsonBar)" />
+
+  <!-- Gold Live Broadcast Accent Slash on Right Edge -->
+  <polygon points="183,41.5 195,41.5 195,57 178,57" fill="url(#goldBar)" />
+  <circle cx="188.5" cy="49.2" r="2.5" fill="#002B49" />
+
+  <!-- "NEWS NETWORK" Sub-Banner Typography -->
   <text
-    x="86"
-    y="35"
-    textLength="196"
-    lengthAdjust="spacing"
-    font-family="'Oswald', 'Arial Black', 'Segoe UI', Impact, system-ui, sans-serif"
-    font-weight="900"
-    font-size="30"
+    x="17"
+    y="52.8"
     fill="#FFFFFF"
-    filter="url(#pnnDrop)"
-  >PROLIFIC</text>
-
-  <!-- Top-Right Global Authority Pill -->
-  <g transform="translate(292, 14)">
-    <rect x="0" y="0" width="60" height="18" rx="3" fill="#001829" stroke="#004C80" stroke-width="1" />
-    <circle cx="9" cy="9" r="2.5" fill="#10B981" />
-    <text x="34" y="12.2" font-family="system-ui, -apple-system, 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="8" letter-spacing="1" fill="#A3CBE8" text-anchor="middle">GLOBAL</text>
-  </g>
-
-  <!-- Gold Precision Divider Rule -->
-  <line x1="86" y1="41.5" x2="352" y2="41.5" stroke="url(#pnnGold)" stroke-width="1.2" opacity="0.75" />
-
-  <!-- TIER 2 (BOTTOM): [ NEWS ] + NETWORK + .NEWS -->
-  <g transform="translate(86, 46)">
-    <!-- Crimson Broadcast NEWS Ribbon -->
-    <rect x="0" y="0" width="66" height="19" rx="3.5" fill="url(#pnnCrimson)" filter="url(#pnnDrop)" />
-    <text
-      x="33"
-      y="13.5"
-      font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif"
-      font-weight="900"
-      font-size="12"
-      letter-spacing="2.2"
-      fill="#FFFFFF"
-      text-anchor="middle"
-    >NEWS</text>
-
-    <!-- NETWORK in Broadcast Gold -->
-    <text
-      x="76"
-      y="13.8"
-      font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif"
-      font-weight="900"
-      font-size="12"
-      letter-spacing="3.5"
-      fill="url(#pnnGold)"
-    >NETWORK</text>
-
-    <!-- Separator Dot -->
-    <circle cx="176" cy="9.5" r="2" fill="#FF1E27" />
-
-    <!-- Domain Callout -->
-    <text
-      x="185"
-      y="13.2"
-      font-family="ui-monospace, 'Cascadia Code', 'Segoe UI', monospace, sans-serif"
-      font-weight="700"
-      font-size="9.5"
-      letter-spacing="1"
-      fill="#9CC2E0"
-    >PROLIFIC.NEWS</text>
-  </g>
+    font-family="'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-weight="900"
+    font-size="10.5"
+    letter-spacing="3.2"
+    textLength="152"
+    lengthAdjust="spacing"
+  >NEWS NETWORK</text>
 </svg>
