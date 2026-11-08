@@ -178,6 +178,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@neondatabase/auth':
+        specifier: 0.7.0-beta
+        version: 0.7.0-beta(d086efeedb241c5224621c77c0316366)
       '@prolific/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -190,9 +193,6 @@ importers:
       '@prolific/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@neondatabase/auth':
-        specifier: 0.7.0-beta
-        version: 0.7.0-beta(d086efeedb241c5224621c77c0316366)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -343,12 +343,12 @@ importers:
 
   packages/db:
     dependencies:
-      '@prolific/types':
-        specifier: workspace:*
-        version: link:../types
       '@neondatabase/serverless':
         specifier: ^0.10.4
         version: 0.10.4
+      '@prolific/types':
+        specifier: workspace:*
+        version: link:../types
       drizzle-orm:
         specifier: ^0.39.3
         version: 0.39.3(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.10.0)(@types/pg@8.15.6)(kysely@0.29.7)
