@@ -46,18 +46,24 @@ export async function GET() {
 
     if (res.ok) {
       const html = await res.text();
-      const vidMatch = html.match(/"videoId":"([a-zA-Z0-9_-]{11})"/);
+      const liveRendererMatch = html.match(
+        /"liveStreamabilityRenderer":\{"videoId":"([a-zA-Z0-9_-]{11})"/
+      );
+      const canonicalMatch = html.match(
+        /<link rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})"/
+      );
+      const activeVideoId = liveRendererMatch?.[1] || canonicalMatch?.[1];
       const isEmbeddable = !html.includes('"playableInEmbed":false');
-      const hasLive = html.includes('"liveStreamabilityRenderer"') || html.includes('"isLive":true');
+      const hasLive = Boolean(liveRendererMatch?.[1]) || html.includes('"isLive":true');
 
-      if (vidMatch?.[1] && isEmbeddable && hasLive) {
-        const verifiedTitle = await verifyYouTubeEmbeddable(vidMatch[1]);
+      if (activeVideoId && isEmbeddable && hasLive) {
+        const verifiedTitle = await verifyYouTubeEmbeddable(activeVideoId);
         if (verifiedTitle) {
           const payload: ResolvedStreamPayload = {
             mode: 'youtube-live',
-            videoId: vidMatch[1],
+            videoId: activeVideoId,
             title: verifiedTitle,
-            embedUrl: buildYouTubeNoCookieEmbedUrl(vidMatch[1]),
+            embedUrl: buildYouTubeNoCookieEmbedUrl(activeVideoId),
             resolvedAt: new Date().toISOString(),
           };
           return NextResponse.json(payload, {
