@@ -30,6 +30,15 @@ export function trackTelemetryEvent(
       keepalive: true,
     }).catch(() => {});
   }
+
+  // Forward custom event to Google Tag Manager / GA4 dataLayer
+  if (typeof window !== 'undefined' && (window as any).dataLayer) {
+    (window as any).dataLayer.push({
+      event: eventName,
+      article_slug: articleSlug,
+      ...metadata,
+    });
+  }
 }
 
 function getOrCreateSessionId(): string {
@@ -101,6 +110,18 @@ function TelemetryTrackerInner() {
       body: JSON.stringify(initialPayload),
       keepalive: true,
     }).catch(() => {});
+
+    // Forward page view to Google Tag Manager / GA4 dataLayer
+    if (typeof window !== 'undefined' && (window as any).dataLayer) {
+      (window as any).dataLayer.push({
+        event: 'page_view',
+        page_path: pathname,
+        article_slug: articleSlug,
+        utm_source: utmSource,
+        utm_medium: utmMedium,
+        utm_campaign: utmCampaign,
+      });
+    }
 
     // Subsequent internal pages should not carry the external initial referrer
     initialReferrerRef.current = window.location.href;
