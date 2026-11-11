@@ -54,8 +54,7 @@ export function FloatingMiniPlayer() {
       {/* Live Video Stream Container */}
       <div className="relative aspect-video bg-black">
         <LiveStreamPlayer
-          autoPlay={true}
-          showChyron={false}
+          showTopBar={false}
           className="w-full h-full"
         />
       </div>
