@@ -158,8 +158,8 @@ export async function getLeadAndFeaturedArticles(): Promise<{
       role: 'Chief Washington Correspondent',
     },
     leadMedia: {
-      type: 'VIDEO',
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      type: 'IMAGE',
+      url: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
       thumbnailUrl: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
       caption: 'Photo: Prolific News Desk',
     },
@@ -318,7 +318,7 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
       return {
         id: matchedWire.id,
         slug,
-        title: cleanTitle.toUpperCase(),
+        title: cleanTitle,
         subtitle: cleanSub,
         keyDevelopments: [
           `Real-time wire dispatch filed by ${matchedWire.source}.`,
@@ -572,7 +572,7 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Categ
         return {
           id: wire.id,
           slug,
-          title: cleanTitle.toUpperCase(),
+          title: cleanTitle,
           subtitle: cleanSub,
           keyDevelopments: [
             `Direct wire dispatches verified through ${wire.source}.`,
@@ -589,10 +589,8 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Categ
             avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
           },
           leadMedia: {
-            type: idx === 0 ? 'VIDEO' : 'IMAGE',
-            url: idx === 0
-              ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
-              : wire.mediaUrl || '',
+            type: 'IMAGE',
+            url: wire.mediaUrl || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80',
             thumbnailUrl: wire.mediaUrl || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80',
             caption: `${cleanTitle} — Verified via ${wire.source}.`,
           },
@@ -636,10 +634,10 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Categ
       role: 'Senior Newsroom Staff',
     },
     leadMedia: {
-      type: 'VIDEO',
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      type: 'IMAGE',
+      url: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80',
       thumbnailUrl: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80',
-      caption: `Prolific News Network live stream covering ${meta.name} developments.`,
+      caption: `Prolific News Network bureau desk covering ${meta.name} developments.`,
     },
     isLeadHero: true,
     isBreaking: true,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Mail,
@@ -27,6 +27,13 @@ const ICONS: Record<string, React.ElementType> = {
 
 export default function ContactPage() {
   const [selectedDept, setSelectedDept] = useState('editorial');
+
+  useEffect(() => {
+    const dept = new URLSearchParams(window.location.search).get('dept');
+    if (dept && DEPARTMENTS[dept]) {
+      setSelectedDept(dept);
+    }
+  }, []);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');

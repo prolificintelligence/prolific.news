@@ -3,42 +3,21 @@ import { HeroLeadPackage } from '../components/HeroLeadPackage';
 import { ThreeColumnLayout } from '../components/ThreeColumnLayout';
 import { PersonalizedNewsWidget } from '../components/PersonalizedNewsWidget';
 import { getLeadAndFeaturedArticles, getLatestWireBulletins } from '../lib/news-service';
+import { PUBLIC_DOMAIN_CATALOG } from '../lib/video-catalog';
 import { VideoClip } from '@prolific/types';
 
 export const revalidate = 60; // Refresh every 60 seconds
 
-const VIDEO_CLIPS: VideoClip[] = [
-  {
-    id: 'v1',
-    title: 'Watch: Washington and Geneva bureau analysis of strategic supply chains and defense pact',
-    durationSeconds: 284,
-    streamId: 'cf-stream-01',
-    hlsPlaybackUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=600&q=80',
-    category: 'Politics',
-    publishedAt: new Date().toISOString(),
-  },
-  {
-    id: 'v2',
-    title: 'Panel debate: Can independent energy grids and microgrids sustain the global AI infrastructure surge?',
-    durationSeconds: 340,
-    streamId: 'cf-stream-02',
-    hlsPlaybackUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=600&q=80',
-    category: 'Business',
-    publishedAt: new Date().toISOString(),
-  },
-  {
-    id: 'v3',
-    title: 'Special Investigation: Emerging African and Asian technology corridors driving global trade',
-    durationSeconds: 310,
-    streamId: 'cf-stream-03',
-    hlsPlaybackUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=600&q=80',
-    category: 'World',
-    publishedAt: new Date().toISOString(),
-  },
-];
+const VIDEO_CLIPS: VideoClip[] = PUBLIC_DOMAIN_CATALOG.slice(0, 3).map((item) => ({
+  id: item.id,
+  title: item.title,
+  durationSeconds: item.durationSeconds || 1800,
+  streamId: item.id,
+  hlsPlaybackUrl: item.embedUrl,
+  thumbnailUrl: item.poster || 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+  category: item.category,
+  publishedAt: new Date().toISOString(),
+}));
 
 export default async function HomePage() {
   const [{ leadArticle, centerArticles }, wireArticles] = await Promise.all([

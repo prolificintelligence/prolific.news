@@ -80,34 +80,46 @@ export function HeroLeadPackage({ article }: HeroLeadPackageProps) {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
 
-            {/* Live/Video Tag */}
-            <div className="absolute top-3 left-3 flex items-center gap-2">
-              <span className="bg-[#CC0000] text-white text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded flex items-center gap-1 shadow">
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                Video Report
-              </span>
-            </div>
+            {/* Conditional Video vs Dispatch Badge */}
+            {article.leadMedia?.type === 'VIDEO' ? (
+              <>
+                <div className="absolute top-3 left-3 flex items-center gap-2">
+                  <span className="bg-[#CC0000] text-white text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded flex items-center gap-1 shadow">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                    Video Report
+                  </span>
+                </div>
 
-            {/* Play Button Overlay */}
-            <Link
-              href={`/article/${article.slug}`}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <div className="w-14 h-14 rounded-full bg-[#CC0000]/90 text-white flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:bg-[#CC0000] transition duration-200">
-                <Play className="w-7 h-7 fill-white translate-x-0.5" />
-              </div>
-            </Link>
+                {/* Play Button Overlay */}
+                <Link
+                  href={`/article/${article.slug}`}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <div className="w-14 h-14 rounded-full bg-[#CC0000]/90 text-white flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:bg-[#CC0000] transition duration-200">
+                    <Play className="w-7 h-7 fill-white translate-x-0.5" />
+                  </div>
+                </Link>
+              </>
+            ) : (
+              <Link
+                href={`/article/${article.slug}`}
+                className="absolute inset-0"
+                aria-label={`Read ${article.title}`}
+              />
+            )}
 
-            {/* Caption in video frame */}
-            <div className="absolute bottom-3 left-3 right-3 text-white">
+            {/* Caption in visual frame */}
+            <div className="absolute bottom-3 left-3 right-3 text-white pointer-events-none">
               <p className="text-xs font-semibold line-clamp-1 drop-shadow">
-                {article.leadMedia?.caption || 'Special broadcast report streaming now on Prolific News.'}
+                {article.leadMedia?.caption || article.title}
               </p>
             </div>
           </div>
 
           <p className="text-[11px] text-gray-500 italic">
-            Photo/Video: Prolific News Digital Broadcast Pool
+            {article.leadMedia?.type === 'VIDEO'
+              ? 'Video: Prolific News Digital Broadcast Pool'
+              : `Photo Dispatch • ${article.author?.name || 'Prolific News Wire'}`}
           </p>
         </div>
       </div>

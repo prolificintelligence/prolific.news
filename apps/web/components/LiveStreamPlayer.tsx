@@ -3,33 +3,14 @@
 import React, { useRef } from 'react';
 import Link from 'next/link';
 import { Maximize2, Film, Sparkles, ShieldCheck } from 'lucide-react';
+import {
+  VideoStreamItem,
+  FLAGSHIP_LIVE_STREAM,
+  DEFAULT_PUBLIC_DOMAIN_VIDEO_URL,
+} from '../lib/video-catalog';
 
-export interface VideoStreamItem {
-  id: string;
-  title: string;
-  category: string;
-  duration?: string;
-  summary?: string;
-  embedUrl: string;
-  poster?: string;
-  isLive?: boolean;
-  license?: string;
-}
-
-export const FLAGSHIP_LIVE_STREAM: VideoStreamItem = {
-  id: 'flagship-nasa-live',
-  title: 'NASA Earth & Orbital Telemetry — 24/7 Live Satellite Observation',
-  category: 'Planetary & Aerospace Intelligence',
-  duration: '24/7 Live Feed',
-  summary:
-    'Continuous real-time high-definition satellite observation directly from the International Space Station and NASA deep space telemetry. 100% Public Domain & Ad-Free.',
-  embedUrl:
-    'https://www.youtube-nocookie.com/embed/live_stream?channel=UCLA_DiR1FfKNvjuUpBHmylQ&autoplay=1&mute=1&playsinline=1&controls=1&rel=0',
-  poster:
-    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
-  isLive: true,
-  license: 'U.S. Federal Government (Public Domain)',
-};
+export type { VideoStreamItem };
+export { FLAGSHIP_LIVE_STREAM };
 
 interface LiveStreamPlayerProps {
   item?: VideoStreamItem;
@@ -49,14 +30,20 @@ export function LiveStreamPlayer({
 }: LiveStreamPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  // Sanitize legacy demo URLs if any persist in static cache
+  const cleanStreamUrl =
+    streamUrl && streamUrl.includes('commondatastorage.googleapis.com')
+      ? DEFAULT_PUBLIC_DOMAIN_VIDEO_URL
+      : streamUrl;
+
   const activeItem: VideoStreamItem = item || {
     id: 'stream-custom',
     title: 'Prolific Newsroom Broadcast',
     category: 'Video Dispatch',
     duration: 'Feature',
     summary: 'Prolific News Network broadcast reporting and documentary video dispatch.',
-    embedUrl: streamUrl || FLAGSHIP_LIVE_STREAM.embedUrl,
-    isLive: !streamUrl,
+    embedUrl: cleanStreamUrl || FLAGSHIP_LIVE_STREAM.embedUrl,
+    isLive: !cleanStreamUrl,
   };
 
   const isDirectVideo =

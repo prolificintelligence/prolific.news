@@ -356,37 +356,37 @@ async function run() {
     console.log(`✓ Set Lead Hero to: [${topOverallItem.category}] ${topOverallItem.title} (Score: ${topOverallScore})`);
   }
 
-  // Seed video_clips with autonomous broadcast loops
-  console.log('\n--- SEEDING AUTONOMOUS BROADCAST VIDEO CLIPS ---');
+  // Seed video_clips with sovereign public domain documentaries
+  console.log('\n--- SEEDING SOVEREIGN PUBLIC DOMAIN VIDEO CLIPS ---');
   const clips = [
     {
-      id: 'clip-01',
-      title: 'Prolific World Dispatch: Geopolitical Accords & Global Trade Corridors',
-      durationSeconds: '284',
-      streamId: 'prolific-clip-01',
-      hlsPlaybackUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-      thumbnailUrl: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
-      category: 'World',
+      id: 'doc-earth-orbit',
+      title: 'Earth from Low Orbit: Continental Corridors & Orbital Dynamics',
+      durationSeconds: '1920',
+      streamId: 'doc-earth-orbit',
+      hlsPlaybackUrl: 'https://images-assets.nasa.gov/video/GSFC_20150420_Orbit_m11858_2014/GSFC_20150420_Orbit_m11858_2014~medium.mp4',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+      category: 'Planetary Intelligence',
       isLiveBroadcast: false
     },
     {
-      id: 'clip-02',
-      title: 'Prolific Markets Roundup: Central Bank Rates, Tech Valuation & Commodity Shifts',
-      durationSeconds: '340',
-      streamId: 'prolific-clip-02',
-      hlsPlaybackUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-      thumbnailUrl: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1200&q=80',
-      category: 'Business',
+      id: 'doc-climate-ocean',
+      title: 'Deep Ocean Dynamics: El Niño, Trade Winds & Global Maritime Shifts',
+      durationSeconds: '1440',
+      streamId: 'doc-climate-ocean',
+      hlsPlaybackUrl: 'https://images-assets.nasa.gov/video/GSFC_20170526_ElNino_m12601_3D/GSFC_20170526_ElNino_m12601_3D~medium.mp4',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+      category: 'Environmental Geopolitics',
       isLiveBroadcast: false
     },
     {
-      id: 'clip-03',
-      title: 'Prolific Africa & Asia Nexus: Infrastructure Corridors and Emerging Tech',
-      durationSeconds: '310',
-      streamId: 'prolific-clip-03',
-      hlsPlaybackUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-      thumbnailUrl: 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80',
-      category: 'Africa',
+      id: 'doc-deep-space-webb',
+      title: 'Deep Space Telemetry: James Webb Telescope Engineering Briefing',
+      durationSeconds: '2700',
+      streamId: 'doc-deep-space-webb',
+      hlsPlaybackUrl: 'https://images-assets.nasa.gov/video/News%20Conference%20on%20the%20Engineering%20of%20the%20James%20Webb%20Space%20Telescope/News%20Conference%20on%20the%20Engineering%20of%20the%20James%20Webb%20Space%20Telescope~mobile.mp4',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1200&q=80',
+      category: 'Space Tech & Astrophysics',
       isLiveBroadcast: false
     }
   ];

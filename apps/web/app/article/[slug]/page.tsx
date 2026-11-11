@@ -5,6 +5,7 @@ import { MessageSquare, Radio, Play, Globe, TrendingUp } from 'lucide-react';
 import { LiveStreamPlayer } from '../../../components/LiveStreamPlayer';
 import { ArticleEngagementBar } from '../../../components/ArticleEngagementBar';
 import { getArticleBySlug, getArticlesByCategory } from '../../../lib/news-service';
+import { DEFAULT_PUBLIC_DOMAIN_VIDEO_URL } from '../../../lib/video-catalog';
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -240,7 +241,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           {article.leadMedia?.type === 'VIDEO' ? (
             <div className="aspect-video w-full rounded overflow-hidden bg-black shadow-md relative">
               <LiveStreamPlayer
-                streamUrl={article.leadMedia?.url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}
+                streamUrl={article.leadMedia?.url || DEFAULT_PUBLIC_DOMAIN_VIDEO_URL}
                 autoPlay={false}
                 showChyron={false}
                 className="w-full h-full"

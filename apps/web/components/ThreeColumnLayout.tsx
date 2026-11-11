@@ -240,7 +240,7 @@ export function ThreeColumnLayout({ wireArticles, centerArticles, videoClips }: 
 
             <div className="space-y-4">
               {videoClips.map((clip) => (
-                <Link key={clip.id} href="/watch" className="group block">
+                <Link key={clip.id} href={`/watch?feature=${encodeURIComponent(clip.id)}`} className="group block">
                   <div className="aspect-video w-full rounded overflow-hidden bg-black relative mb-1.5 shadow-sm">
                     <img
                       src={clip.thumbnailUrl}
@@ -252,6 +252,9 @@ export function ThreeColumnLayout({ wireArticles, centerArticles, videoClips }: 
                         <Play className="w-4 h-4 fill-white translate-x-0.5" />
                       </div>
                     </div>
+                    <span className="absolute top-1.5 left-1.5 bg-[#002B49]/90 text-[#FFCC00] text-[9px] font-headline font-bold uppercase px-1.5 py-0.5 rounded">
+                      {clip.category}
+                    </span>
                     <span className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] font-mono font-bold px-1 rounded">
                       {Math.floor(clip.durationSeconds / 60)}:{(clip.durationSeconds % 60).toString().padStart(2, '0')}
                     </span>
