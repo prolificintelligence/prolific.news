@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useRef } from 'react';
-import Link from 'next/link';
-import { Maximize2, Film, Sparkles, ShieldCheck } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Maximize2, Film, ShieldCheck } from 'lucide-react';
 import {
   VideoStreamItem,
   FLAGSHIP_LIVE_STREAM,
@@ -29,6 +28,7 @@ export function LiveStreamPlayer({
   className = '',
 }: LiveStreamPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [liveResolvedUrl, setLiveResolvedUrl] = useState<string | null>(null);
 
   // Sanitize legacy demo URLs if any persist in static cache
   const cleanStreamUrl =
@@ -37,7 +37,7 @@ export function LiveStreamPlayer({
       : streamUrl;
 
   const activeItem: VideoStreamItem = item || {
-    id: 'stream-custom',
+    id: cleanStreamUrl ? 'stream-custom' : FLAGSHIP_LIVE_STREAM.id,
     title: 'Prolific Newsroom Broadcast',
     category: 'Video Dispatch',
     duration: 'Feature',
@@ -46,10 +46,39 @@ export function LiveStreamPlayer({
     isLive: !cleanStreamUrl,
   };
 
+  // Auto-resolve live flagship stream ID so NASA stream rotations or maintenance never trigger "Video unavailable"
+  const shouldResolveFlagship = Boolean(activeItem.isLive && activeItem.id === FLAGSHIP_LIVE_STREAM.id);
+
+  useEffect(() => {
+    if (!shouldResolveFlagship) {
+      setLiveResolvedUrl(null);
+      return;
+    }
+
+    let cancelled = false;
+    fetch('/api/live/stream')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { embedUrl?: string } | null) => {
+        if (!cancelled && data?.embedUrl) {
+          setLiveResolvedUrl(data.embedUrl);
+        }
+      })
+      .catch(() => {
+        // Keep initial FLAGSHIP_LIVE_STREAM.embedUrl on transient network error
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [shouldResolveFlagship]);
+
+  const effectiveEmbedUrl =
+    shouldResolveFlagship && liveResolvedUrl ? liveResolvedUrl : activeItem.embedUrl;
+
   const isDirectVideo =
-    activeItem.embedUrl.endsWith('.mp4') ||
-    activeItem.embedUrl.endsWith('.webm') ||
-    activeItem.embedUrl.includes('images-assets.nasa.gov');
+    effectiveEmbedUrl.endsWith('.mp4') ||
+    effectiveEmbedUrl.endsWith('.webm') ||
+    effectiveEmbedUrl.includes('images-assets.nasa.gov');
 
   const toggleFullscreen = () => {
     const container = containerRef.current;
@@ -65,13 +94,13 @@ export function LiveStreamPlayer({
   return (
     <div
       ref={containerRef}
-      className={`relative bg-black rounded-xl overflow-hidden group select-none shadow-2xl border border-gray-900 aspect-video w-full ${className}`}
+      className={`relative bg-black rounded-xl overflow-hidden group select-none shadow-lg border border-gray-200 aspect-video w-full ${className}`}
     >
       {/* Media Renderer: Direct Native HTML5 Video OR Sovereign Public Domain Embed */}
       {isDirectVideo ? (
         <video
-          key={activeItem.id}
-          src={activeItem.embedUrl}
+          key={`${activeItem.id}:${effectiveEmbedUrl}`}
+          src={effectiveEmbedUrl}
           poster={activeItem.poster}
           controls
           autoPlay={autoPlay ?? true}
@@ -81,10 +110,11 @@ export function LiveStreamPlayer({
         />
       ) : (
         <iframe
-          key={activeItem.id}
-          src={activeItem.embedUrl}
+          key={`${activeItem.id}:${effectiveEmbedUrl}`}
+          src={effectiveEmbedUrl}
           title={activeItem.title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerPolicy="strict-origin-when-cross-origin"
           allowFullScreen
           className="w-full h-full border-0 absolute inset-0"
         />
@@ -94,7 +124,7 @@ export function LiveStreamPlayer({
       {showTopBar && (
         <div className="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none z-20">
           <div className="flex items-center gap-2">
-            {activeItem.isLive ? (
+            {activeItem.isLive && !isDirectVideo ? (
               <span className="bg-[#CC0000] text-white text-[10px] md:text-xs font-headline font-black tracking-widest uppercase px-2.5 py-1 rounded flex items-center gap-1.5 shadow-lg">
                 <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
                 LIVE 24/7
@@ -133,24 +163,6 @@ export function LiveStreamPlayer({
           </div>
         </div>
       )}
-
-      {/* Prolific Broadcast Sponsorship Overlay Ribbon */}
-      <div className="absolute bottom-3 inset-x-3 pointer-events-none z-20 hidden md:flex items-center justify-between text-[10px] md:text-xs">
-        <div className="bg-black/80 backdrop-blur-md border border-white/10 px-3 py-1 rounded text-gray-300 font-sans flex items-center gap-2 pointer-events-auto shadow-md">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span className="font-semibold text-white">Prolific Broadcast Network</span>
-          <span className="text-gray-500">•</span>
-          <span className="text-[#FFCC00] font-mono">White-Label Institutional Feed</span>
-        </div>
-
-        <Link
-          href="/contact?dept=partnerships"
-          className="pointer-events-auto bg-[#002B49]/90 hover:bg-[#003B64] text-[#FFCC00] hover:text-white border border-[#004A80] px-3 py-1 rounded font-headline font-bold uppercase transition tracking-wider flex items-center gap-1.5 shadow-lg backdrop-blur-md"
-        >
-          <Sparkles className="w-3 h-3 text-[#FFCC00]" />
-          <span>Sponsor Broadcast: partnerships@prolific.news</span>
-        </Link>
-      </div>
     </div>
   );
 }

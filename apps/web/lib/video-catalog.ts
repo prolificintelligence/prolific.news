@@ -11,6 +11,13 @@ export interface VideoStreamItem {
   license?: string;
 }
 
+export const NASA_LIVE_CHANNEL_ID = 'UCLA_DiR1FfKNvjuUpBHmylQ';
+export const DEFAULT_NASA_LIVE_VIDEO_ID = 'ROboUHfPUrU';
+
+export function buildYouTubeNoCookieEmbedUrl(videoId: string): string {
+  return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&controls=1&rel=0`;
+}
+
 export const FLAGSHIP_LIVE_STREAM: VideoStreamItem = {
   id: 'flagship-nasa-live',
   title: 'NASA Earth & Orbital Telemetry — 24/7 Live Satellite Observation',
@@ -18,8 +25,7 @@ export const FLAGSHIP_LIVE_STREAM: VideoStreamItem = {
   duration: '24/7 Live Feed',
   summary:
     'Continuous real-time high-definition satellite observation directly from the International Space Station and NASA deep space telemetry. 100% Public Domain & Ad-Free.',
-  embedUrl:
-    'https://www.youtube-nocookie.com/embed/live_stream?channel=UCLA_DiR1FfKNvjuUpBHmylQ&autoplay=1&mute=1&playsinline=1&controls=1&rel=0',
+  embedUrl: buildYouTubeNoCookieEmbedUrl(DEFAULT_NASA_LIVE_VIDEO_ID),
   poster:
     'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
   isLive: true,
