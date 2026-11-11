@@ -1,31 +1,57 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { MarketTickerItem } from '@prolific/types';
 
-const EXTENDED_TICKERS: MarketTickerItem[] = [
+const INITIAL_TICKERS: MarketTickerItem[] = [
   { symbol: 'DOW', name: 'Dow Jones', price: '43,910.28', change: '+248.12', percentChange: '+0.57%', isPositive: true },
   { symbol: 'S&P 500', name: 'S&P 500', price: '5,983.99', change: '+21.40', percentChange: '+0.36%', isPositive: true },
   { symbol: 'NASDAQ', name: 'Nasdaq Composite', price: '19,281.40', change: '-34.80', percentChange: '-0.18%', isPositive: false },
-  { symbol: 'RUSSELL', name: 'Russell 2000', price: '2,392.15', change: '+18.20', percentChange: '+0.77%', isPositive: true },
+  { symbol: 'BITCOIN', name: 'BTC/USD', price: '$73,910', change: '+850', percentChange: '+1.15%', isPositive: true },
+  { symbol: 'ETHEREUM', name: 'ETH/USD', price: '$2,058', change: '-32.50', percentChange: '-1.55%', isPositive: false },
+  { symbol: 'SOLANA', name: 'SOL/USD', price: '$83.70', change: '-1.40', percentChange: '-1.65%', isPositive: false },
   { symbol: 'CRUDE OIL', name: 'Crude Oil', price: '$71.24', change: '+0.88', percentChange: '+1.25%', isPositive: true },
   { symbol: 'BRENT', name: 'Brent Crude', price: '$75.60', change: '+0.92', percentChange: '+1.23%', isPositive: true },
   { symbol: 'GOLD', name: 'Gold Spot', price: '$2,735.40', change: '-12.10', percentChange: '-0.44%', isPositive: false },
-  { symbol: 'SILVER', name: 'Silver Spot', price: '$33.85', change: '+0.42', percentChange: '+1.26%', isPositive: true },
+  { symbol: 'EUR/USD', name: 'Euro / US Dollar', price: '1.1186', change: '+0.0012', percentChange: '+0.11%', isPositive: true },
+  { symbol: 'GBP/USD', name: 'British Pound / USD', price: '1.3366', change: '+0.0024', percentChange: '+0.18%', isPositive: true },
   { symbol: '10-YR', name: '10-Yr Treasury', price: '4.42%', change: '+0.03', percentChange: '+0.68%', isPositive: true },
-  { symbol: '2-YR', name: '2-Yr Treasury', price: '4.21%', change: '-0.01', percentChange: '-0.24%', isPositive: false },
-  { symbol: 'BITCOIN', name: 'BTC/USD', price: '$68,450', change: '+1,240', percentChange: '+1.85%', isPositive: true },
-  { symbol: 'EUR/USD', name: 'Euro / US Dollar', price: '1.0820', change: '-0.0015', percentChange: '-0.14%', isPositive: false },
 ];
 
 export function MarketTicker() {
+  const [tickers, setTickers] = useState<MarketTickerItem[]>(INITIAL_TICKERS);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchMarkets = async () => {
+      try {
+        const res = await fetch('/api/live/ticker');
+        const data = await res.json();
+        if (mounted && data.success && Array.isArray(data.markets) && data.markets.length > 0) {
+          setTickers(data.markets);
+        }
+      } catch {
+        // Fallback to initial
+      }
+    };
+
+    fetchMarkets();
+    const interval = setInterval(fetchMarkets, 45000); // 45s refresh
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   // Duplicate array so continuous loop has zero gap or stutter
-  const tickerLoop = [...EXTENDED_TICKERS, ...EXTENDED_TICKERS];
+  const tickerLoop = [...tickers, ...tickers];
 
   return (
     <div className="w-full bg-[#001A2C] border-b border-[#003366] text-xs font-mono text-gray-200 py-1.5 px-2 select-none overflow-hidden relative flex items-center">
       {/* Fixed Sticky 'MARKETS' Badge */}
       <div className="z-20 bg-[#001A2C] pr-3 pl-2 py-0.5 flex items-center gap-2 font-bold text-[#FFCC00] uppercase tracking-wider text-[11px] shadow-[6px_0_12px_rgba(0,26,44,0.95)] flex-shrink-0 border-r border-[#003366]">
         <span className="inline-block w-2 h-2 rounded-full bg-[#FFCC00] animate-pulse"></span>
-        <span>Markets</span>
+        <span>Markets Live</span>
       </div>
 
       {/* Scrolling Track Container */}

@@ -79,6 +79,14 @@ export function TopHeader() {
             <span>Prolific Plus</span>
           </Link>
 
+          {/* Submit Press Release Link */}
+          <Link
+            href="/submit-press-release"
+            className="hidden md:flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-[#FFCC00] border border-[#FFCC00]/40 px-3 py-1.5 rounded font-headline font-bold text-xs tracking-wider uppercase transition"
+          >
+            <span>Submit Wire</span>
+          </Link>
+
           {/* Search */}
           <Link
             href="/search"

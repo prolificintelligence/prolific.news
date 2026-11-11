@@ -1,0 +1,29 @@
+name: Prolific 24/7 Automated News & Social Cron
+
+on:
+  schedule:
+    # Run every 20 minutes continuously 24/7
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ingest-and-syndicate:
+    name: Rapid Wire Ingestion & Social Syndication
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Trigger Tier-1 Wire Ingest & Social Syndication
+        run: |
+          echo "Triggering Prolific News autonomous 20-minute wire ingest & syndication..."
+          HTTP_STATUS=$(curl -s -o /tmp/cron-response.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://prolific.news/api/cron/ingest?mode=tier1&social=1")
+
+          echo "Response HTTP Status: $HTTP_STATUS"
+          cat /tmp/cron-response.json || true
+
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "Cron ingest responded with non-200 code: $HTTP_STATUS"
+            # Best effort - don't hard fail workflow if site was briefly cold-starting
+          fi

@@ -1,0 +1,3 @@
+# Prolific News Network (PNN) Authorized Digital Sellers
+# https://prolific.news
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

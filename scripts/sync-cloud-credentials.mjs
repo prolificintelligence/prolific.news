@@ -22,6 +22,13 @@ if (envVars.NEXT_PUBLIC_MASTODON_URL === 'https://mastodon.social/@prolificnews'
   envVars.NEXT_PUBLIC_MASTODON_URL = 'https://social.vivaldi.net/@prolificnews';
 }
 
+if (fs.existsSync('D:/Projects/secrets/prolific-engines- openrouter-kk.md')) {
+  envVars.OPENROUTER_API_KEY = fs.readFileSync('D:/Projects/secrets/prolific-engines- openrouter-kk.md', 'utf8').trim();
+}
+if (fs.existsSync('D:/Projects/secrets/prolific-mailsending-resend.md')) {
+  envVars.RESEND_API_KEY = fs.readFileSync('D:/Projects/secrets/prolific-mailsending-resend.md', 'utf8').trim();
+}
+
 function updateLocalEnvFile(filePath) {
   let content = '';
   if (fs.existsSync(filePath)) {

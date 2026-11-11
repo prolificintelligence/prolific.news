@@ -8,6 +8,7 @@ import { autoSyndicateHighValueArticles } from './social-distributor';
 
 export * from './wire-puller';
 export * from './social-distributor';
+export * from './newsletter-sender';
 export { dispatchToPlatform } from './social-channels';
 
 export const inngest = new Inngest({ id: 'prolific-news-platform' });

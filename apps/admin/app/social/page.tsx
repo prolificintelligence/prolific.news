@@ -48,6 +48,7 @@ const PLATFORM_BADGES: Record<string, { bg: string; text: string; label: string 
   BLUESKY: { bg: 'bg-[#0285FF]', text: 'text-white', label: 'Bluesky (prolific.news)' },
   THREADS: { bg: 'bg-neutral-800', text: 'text-white', label: 'Threads (@prolificnews)' },
   MASTODON: { bg: 'bg-[#6364FF]', text: 'text-white', label: 'Mastodon' },
+  DISCORD: { bg: 'bg-[#5865F2]', text: 'text-white', label: 'Discord' },
 };
 
 export default function AdminSocialCommandCenter() {

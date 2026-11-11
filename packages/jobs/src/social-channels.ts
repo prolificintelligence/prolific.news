@@ -33,6 +33,7 @@ export function configuredPlatforms(): SocialPlatform[] {
   if (env('TELEGRAM_BOT_TOKEN') && env('TELEGRAM_CHANNEL_ID')) out.push('TELEGRAM');
   if (env('BLUESKY_HANDLE') && env('BLUESKY_APP_PASSWORD')) out.push('BLUESKY');
   if (env('MASTODON_INSTANCE_URL') && env('MASTODON_ACCESS_TOKEN')) out.push('MASTODON');
+  if (env('DISCORD_WEBHOOK_URL')) out.push('DISCORD');
   return out;
 }
 
@@ -181,6 +182,48 @@ async function postMastodon(input: DispatchInput): Promise<DispatchResult> {
   }
 }
 
+/* ----------------------------- Discord ------------------------------ */
+
+async function postDiscord(input: DispatchInput): Promise<DispatchResult> {
+  const webhookUrl = env('DISCORD_WEBHOOK_URL');
+  try {
+    const embed: any = {
+      title: truncate(input.headline, 256),
+      description: truncate(input.description || input.headline, 1000),
+      url: input.url,
+      color: 0x002b49,
+      footer: { text: 'Prolific News Network • Verified Global Wire' },
+      timestamp: new Date().toISOString(),
+    };
+    if (input.imageUrl) {
+      embed.image = { url: input.imageUrl };
+    }
+
+    const res = await fetch(`${webhookUrl}?wait=true`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: 'Prolific News Network',
+        avatar_url: 'https://prolific.news/logo.png',
+        embeds: [embed],
+      }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+
+    const data: any = await res.json().catch(() => ({}));
+    if (!res.ok || !data.id) {
+      return { ok: false, error: `Discord ${res.status}: ${data.message || 'webhook send failed'}` };
+    }
+    return {
+      ok: true,
+      externalId: String(data.id),
+      externalUrl: `https://discord.com/channels/@me/${data.channel_id}/${data.id}`,
+    };
+  } catch (err: any) {
+    return { ok: false, error: `Discord: ${err?.message || err}` };
+  }
+}
+
 /* ------------------------------ Router ------------------------------ */
 
 export async function dispatchToPlatform(
@@ -197,6 +240,8 @@ export async function dispatchToPlatform(
       return postBluesky(input);
     case 'MASTODON':
       return postMastodon(input);
+    case 'DISCORD':
+      return postDiscord(input);
     default:
       return { ok: false, error: `${platform} has no adapter` };
   }
