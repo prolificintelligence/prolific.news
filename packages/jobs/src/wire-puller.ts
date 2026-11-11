@@ -114,7 +114,7 @@ const KEYWORD_IMAGE_POOL: Array<{ keywords: string[]; url: string }> = [
   { keywords: ['oil', 'crude', 'opec', 'petroleum', 'pipeline', 'refinery'], url: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1200&q=80' },
   { keywords: ['solar', 'renewable', 'wind', 'grid', 'electricity', 'power plant'], url: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1200&q=80' },
   { keywords: ['chip', 'semiconductor', 'nvidia', 'ai ', 'artificial intelligence', 'quantum'], url: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=80' },
-  { keywords: ['space', 'nasa', 'rocket', 'orbit', 'satellite', 'moon', 'mars'], url: 'https://images.unsplash.com/photo-1517976487468-f20514c44f53?auto=format&fit=crop&w=1200&q=80' },
+  { keywords: ['space', 'nasa', 'rocket', 'orbit', 'satellite', 'moon', 'mars'], url: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1200&q=80' },
   { keywords: ['court', 'supreme', 'judge', 'lawsuit', 'trial', 'justice', 'legal'], url: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80' },
   { keywords: ['military', 'pentagon', 'navy', 'defense', 'missile', 'nato', 'troops', 'army'], url: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=1200&q=80' },
   { keywords: ['shipping', 'maritime', 'port', 'cargo', 'tariff', 'export', 'supply chain'], url: 'https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=1200&q=80' },
