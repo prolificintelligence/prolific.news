@@ -125,7 +125,7 @@ export interface UserPersonalizationPreferences {
   readHistory: string[];
 }
 
-export type SocialPlatform = 'X' | 'TELEGRAM' | 'LINKEDIN' | 'FACEBOOK' | 'BLUESKY' | 'THREADS';
+export type SocialPlatform = 'X' | 'TELEGRAM' | 'LINKEDIN' | 'FACEBOOK' | 'BLUESKY' | 'THREADS' | 'MASTODON';
 
 export interface SocialPost {
   id: string;
@@ -151,4 +151,5 @@ export const OFFICIAL_SOCIAL_HANDLES: Record<SocialPlatform, { handle: string; n
   FACEBOOK: { handle: '@prolificnewsnetwork', name: 'Facebook Live & News', profileUrl: 'https://facebook.com/prolificnewsnetwork' },
   BLUESKY: { handle: '@prolific.news', name: 'Bluesky Wire', profileUrl: 'https://bsky.app/profile/prolific.news' },
   THREADS: { handle: '@prolificnews', name: 'Threads', profileUrl: 'https://threads.net/@prolificnews' },
+  MASTODON: { handle: 'Prolific News (Mastodon)', name: 'Mastodon', profileUrl: 'https://mastodon.social' },
 };

@@ -1,7 +1,7 @@
 import { neon } from '../packages/db/node_modules/@neondatabase/serverless/index.mjs';
 import crypto from 'node:crypto';
 
-const DB_URL = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_dJn3u2seLhkz@ep-snowy-wave-bewwlrsd-pooler.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require';
+const DB_URL = process.env.DATABASE_URL;
 const sql = neon(DB_URL);
 
 const CATEGORY_IMAGES = {

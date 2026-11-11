@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from './schema/index';
 
 export * from './schema/index';
-export { eq, desc, and, or, sql, like, ilike, lt, lte, gt, gte } from 'drizzle-orm';
+export { eq, desc, and, or, sql, like, ilike, lt, lte, gt, gte, inArray } from 'drizzle-orm';
 
 declare const process: any;
 

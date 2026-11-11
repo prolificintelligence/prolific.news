@@ -80,8 +80,9 @@ export const socialPosts = pgTable('social_posts', {
   hashtags: jsonb('hashtags').$type<string[]>().default([]).notNull(),
   mediaUrl: text('media_url'),
   targetUrl: text('target_url').notNull(),
-  status: varchar('status', { length: 32 }).default('PUBLISHED').notNull(), // 'QUEUED', 'PUBLISHED', 'DISPATCHED', 'FAILED'
-  externalPostId: varchar('external_post_id', { length: 128 }),
+  status: varchar('status', { length: 32 }).default('PUBLISHED').notNull(), // 'QUEUED', 'DISPATCHED', 'FAILED' (DISPATCHED = platform returned a real post id)
+  externalPostId: text('external_post_id'),
+  errorMessage: text('error_message'),
   impressionsEstimate: integer('impressions_estimate').default(0).notNull(),
   publishedAt: timestamp('published_at', { withTimezone: true }).defaultNow().notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

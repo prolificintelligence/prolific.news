@@ -26,8 +26,8 @@ interface SocialPostItem {
   mediaUrl: string | null;
   status: string;
   externalPostId: string | null;
-  impressions: number;
   postedAt: string | null;
+  errorMessage?: string | null;
   createdAt: string;
 }
 
@@ -47,11 +47,13 @@ const PLATFORM_BADGES: Record<string, { bg: string; text: string; label: string 
   FACEBOOK: { bg: 'bg-[#1877F2]', text: 'text-white', label: 'Facebook' },
   BLUESKY: { bg: 'bg-[#0285FF]', text: 'text-white', label: 'Bluesky (prolific.news)' },
   THREADS: { bg: 'bg-neutral-800', text: 'text-white', label: 'Threads (@prolificnews)' },
+  MASTODON: { bg: 'bg-[#6364FF]', text: 'text-white', label: 'Mastodon' },
 };
 
 export default function AdminSocialCommandCenter() {
   const [posts, setPosts] = useState<SocialPostItem[]>([]);
   const [articles, setArticles] = useState<ArticleSummary[]>([]);
+  const [activeChannels, setActiveChannels] = useState<string[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<string>('ALL');
   const [loading, setLoading] = useState<boolean>(true);
   const [syndicating, setSyndicating] = useState<boolean>(false);
@@ -66,6 +68,7 @@ export default function AdminSocialCommandCenter() {
       if (data.ok) {
         setPosts(data.posts || []);
         setArticles(data.recentArticles || []);
+        setActiveChannels(data.activeChannels || []);
       }
     } catch (err) {
       console.error('Failed to load social dispatches:', err);
@@ -90,7 +93,9 @@ export default function AdminSocialCommandCenter() {
       const data = await res.json();
       if (data.ok) {
         setStatusMessage(
-          `Syndicated ${data.articlesSyndicated || 0} high-value stories across all 6 official @prolificnews handles.`
+          `Posted ${data.postsCreated ?? 0} item(s) from ${data.articlesProcessed ?? 0} story(ies) to: ${
+            (data.configured || []).join(', ') || 'no channels (none configured)'
+          }${data.failed ? `. ${data.failed} failed — see red entries below.` : '.'}`
         );
         await loadData();
       }
@@ -112,7 +117,13 @@ export default function AdminSocialCommandCenter() {
       });
       const data = await res.json();
       if (data.ok) {
-        setStatusMessage(`Dispatched story to ${data.created || 6} social channels!`);
+        setStatusMessage(
+          data.created > 0
+            ? `Posted to ${data.created} channel(s).`
+            : data.failed?.length
+            ? `Failed: ${data.failed.map((f: any) => `${f.platform} (${f.error})`).join('; ')}`
+            : 'Nothing posted: already sent to all configured channels, or no channel is configured.'
+        );
         await loadData();
       }
     } catch (e) {
@@ -201,9 +212,15 @@ export default function AdminSocialCommandCenter() {
                 <span className="text-xs font-mono font-bold text-gray-500">{count} posts</span>
               </div>
               <p className="text-xs font-semibold text-gray-800 truncate">{info.label}</p>
-              <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Auto-Sync Active
-              </span>
+              {activeChannels.includes(key) ? (
+                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Connected
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] text-gray-400 font-semibold mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span> Not connected
+                </span>
+              )}
             </button>
           );
         })}
@@ -269,6 +286,8 @@ export default function AdminSocialCommandCenter() {
                           className={`inline-flex items-center gap-1 text-[11px] font-bold uppercase px-2 py-0.5 rounded ${
                             post.status === 'posted'
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : post.status === 'failed'
+                              ? 'bg-red-50 text-red-700 border border-red-200'
                               : 'bg-amber-50 text-amber-800 border border-amber-200'
                           }`}
                         >
@@ -300,6 +319,22 @@ export default function AdminSocialCommandCenter() {
                     <pre className="whitespace-pre-wrap font-sans text-xs text-gray-800 bg-gray-50 border border-gray-100 rounded-lg p-3 leading-relaxed">
                       {post.postCopy}
                     </pre>
+
+                    {post.status === 'failed' && post.errorMessage && (
+                      <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded p-2 font-mono">
+                        {post.errorMessage}
+                      </p>
+                    )}
+                    {post.status === 'posted' && post.externalPostId?.startsWith('http') && (
+                      <a
+                        href={post.externalPostId}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-emerald-700 underline font-semibold"
+                      >
+                        View live post →
+                      </a>
+                    )}
 
                     <div className="flex items-center justify-between text-[11px] text-gray-400">
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -349,7 +384,7 @@ export default function AdminSocialCommandCenter() {
                     disabled={syndicating}
                     className="bg-[#002B49] hover:bg-[#003B64] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded flex items-center gap-1 transition"
                   >
-                    <Send className="w-2.5 h-2.5 text-[#FFCC00]" /> Blast to 6 Handles
+                    <Send className="w-2.5 h-2.5 text-[#FFCC00]" /> Post to Connected
                   </button>
                 </div>
               </div>

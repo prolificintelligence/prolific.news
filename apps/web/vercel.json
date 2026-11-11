@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/cron/ingest?mode=full&social=0", "schedule": "0 6 * * *" }
+  ]
+}

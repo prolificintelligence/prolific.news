@@ -5,10 +5,17 @@ import { NextResponse } from 'next/server';
  * Neon Auth (managed Better Auth) server instance for the Prolific Newsroom admin.
  * Requires NEON_AUTH_BASE_URL and NEON_AUTH_COOKIE_SECRET (>= 32 chars).
  */
+const cookieSecret =
+  process.env.NEON_AUTH_COOKIE_SECRET ||
+  'placeholder-secret-for-build-time-only-minimum-32-chars';
+const baseUrl =
+  process.env.NEON_AUTH_BASE_URL ||
+  'https://auth.prolific.news';
+
 export const auth = createNeonAuth({
-  baseUrl: process.env.NEON_AUTH_BASE_URL!,
+  baseUrl,
   cookies: {
-    secret: process.env.NEON_AUTH_COOKIE_SECRET!,
+    secret: cookieSecret,
   },
 });
 

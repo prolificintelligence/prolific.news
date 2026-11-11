@@ -8,6 +8,7 @@ import { autoSyndicateHighValueArticles } from './social-distributor';
 
 export * from './wire-puller';
 export * from './social-distributor';
+export { dispatchToPlatform } from './social-channels';
 
 export const inngest = new Inngest({ id: 'prolific-news-platform' });
 
@@ -48,16 +49,15 @@ export const wireIngestTier1Cron = inngest.createFunction(
 );
 
 /**
- * Automated Multi-Platform Social Media Distribution Cron (Every 2 Hours)
- * Syndicates top high-value stories across official @prolificnews handles
- * (X/Twitter, Telegram, LinkedIn, Facebook, Bluesky, Threads).
+ * Automated Social Distribution (hourly, max 2 stories per run, deduplicated per channel).
+ * Posts only to channels that have credentials configured (Telegram, Bluesky, Mastodon).
  */
 export const socialDistributionCron = inngest.createFunction(
   { id: 'cron-social-distribution', concurrency: { limit: 1 }, retries: 1 },
-  { cron: '15 */2 * * *' },
+  { cron: '15 * * * *' },
   async ({ step }) => {
     const result = await step.run('auto-syndicate-social', async () => {
-      return await autoSyndicateHighValueArticles(6);
+      return await autoSyndicateHighValueArticles(2);
     });
 
     return result;

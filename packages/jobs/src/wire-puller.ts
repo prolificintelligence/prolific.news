@@ -1,6 +1,5 @@
 import crypto from 'node:crypto';
 import { createDb, wireItems, articles, breakingAlerts, lt, eq, sql, desc, and, or, ilike } from '@prolific/db';
-import { autoSyndicateHighValueArticles, syndicateArticleToSocials } from './social-distributor';
 
 export interface WireArticle {
   id: string;
@@ -635,7 +634,6 @@ export async function autoPromoteFreshWireItems(
       r.pubDate
     );
 
-    const isTopStory = valueScore >= 85;
     if (valueScore > highestScore) {
       highestScore = valueScore;
       topCandidateId = `art-${r.id.replace('wire-', '')}`;
@@ -649,12 +647,8 @@ export async function autoPromoteFreshWireItems(
           slug,
           title: title.toUpperCase(),
           subtitle: summary,
-          keyDevelopments: [
-            `Dispatch filed via ${r.source}.`,
-            `Prolific News Network ${label} desk tracking developments.`,
-            `Rolling broadcast analysis streaming live on Prolific Watch Hub.`,
-          ],
-          content: `<p class="text-xl font-serif text-gray-800 leading-relaxed font-semibold mb-6">${summary}</p><p class="mb-4">Source: <a href="${r.link}" target="_blank" rel="noopener noreferrer">${r.source}</a>. Prolific Newsroom is monitoring this developing story across our regional bureaus and will update as more information is confirmed.</p>`,
+          keyDevelopments: [`Reported by ${r.source}.`],
+          content: `<p class="text-xl font-serif text-gray-800 leading-relaxed font-semibold mb-6">${summary}</p><p class="mb-4">Source: <a href="${r.link}" target="_blank" rel="noopener noreferrer">${r.source}</a>. This is a summary of reporting from the original publisher; read the full story at the source.</p>`,
           categoryId,
           tags: [r.category, r.source, geoRegion],
           authorId: 'auth-ed-board',
@@ -662,7 +656,8 @@ export async function autoPromoteFreshWireItems(
           leadMediaUrl: r.mediaUrl,
           leadMediaCaption: `${title} — via ${r.source}.`,
           isLeadHero: false,
-          isBreaking: isTopStory,
+          // "Breaking" is an editorial decision and is never inferred from the score.
+          isBreaking: false,
           status: 'PUBLISHED',
           readTimeMinutes: 3,
           valueScore,
@@ -712,7 +707,6 @@ export async function syncTieredFeedsToNeonDb(tier: 1 | 2 | 3): Promise<{ insert
   try {
     ({ promoted } = await autoPromoteFreshWireItems(tier === 1 ? 4 : 2));
     if (promoted > 0) {
-      await autoSyndicateHighValueArticles(3).catch((e) => console.warn('[SocialAuto] Tier sync warn:', e));
       await revalidateEdge();
     }
   } catch (err) {
@@ -741,7 +735,6 @@ export async function syncWireFeedsToNeonDb(): Promise<{ inserted: number; total
     promoted = promoResult.promoted;
     console.log(`[Wire] Auto-promoted ${promoted} fresh articles across categories:`, promoResult.byCategory);
     if (promoted > 0) {
-      await autoSyndicateHighValueArticles(5).catch((e) => console.warn('[SocialAuto] Full sync warn:', e));
       await revalidateEdge();
     }
   } catch (err) {
@@ -812,13 +805,9 @@ export async function promoteWireItemToArticle(
     item.pubDate ? new Date(item.pubDate) : new Date()
   );
 
-  const keyDevelopments = [
-    `Dispatch filed via ${item.source}.`,
-    `Prolific News Network ${label} desk tracking developments.`,
-    `Rolling broadcast analysis streaming live on Prolific Watch Hub.`,
-  ];
+  const keyDevelopments = [`Reported by ${item.source}.`];
 
-  const content = `<p class="text-xl font-serif text-gray-800 leading-relaxed font-semibold mb-6">${summary}</p><p class="mb-4">Source: <a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.source}</a>. Prolific Newsroom is monitoring this developing story across our regional bureaus and will update as more information is confirmed.</p>`;
+  const content = `<p class="text-xl font-serif text-gray-800 leading-relaxed font-semibold mb-6">${summary}</p><p class="mb-4">Source: <a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.source}</a>. This is a summary of reporting from the original publisher; read the full story at the source.</p>`;
 
   await db
     .insert(articles)
@@ -836,7 +825,7 @@ export async function promoteWireItemToArticle(
       leadMediaUrl: item.mediaUrl,
       leadMediaCaption: `${title} — via ${item.source}.`,
       isLeadHero: options.isLeadHero ?? false,
-      isBreaking: options.isBreaking ?? (valueScore >= 85),
+      isBreaking: options.isBreaking ?? false,
       status: 'PUBLISHED',
       readTimeMinutes: 3,
       valueScore,
@@ -850,7 +839,7 @@ export async function promoteWireItemToArticle(
         title: title.toUpperCase(),
         subtitle: summary,
         isLeadHero: options.isLeadHero ?? false,
-        isBreaking: options.isBreaking ?? (valueScore >= 85),
+        isBreaking: options.isBreaking ?? false,
         valueScore,
         priorityTier,
         geoRegion,
@@ -861,19 +850,6 @@ export async function promoteWireItemToArticle(
     await db.update(articles).set({ isLeadHero: false });
     await db.update(articles).set({ isLeadHero: true }).where(eq(articles.id, articleId));
   }
-
-  await syndicateArticleToSocials({
-    id: articleId,
-    slug,
-    title: title.toUpperCase(),
-    subtitle: summary,
-    category: item.category,
-    geoRegion,
-    valueScore,
-    isBreaking: options.isBreaking ?? (valueScore >= 85),
-    leadMediaUrl: item.mediaUrl,
-    keyDevelopments,
-  }).catch((e) => console.warn('[SocialAuto] Promote warn:', e));
 
   await revalidateEdge();
 

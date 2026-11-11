@@ -7,6 +7,9 @@ import { TopHeader } from '../components/TopHeader';
 import { BreakingBanner } from '../components/BreakingBanner';
 import { FloatingMiniPlayer } from '../components/FloatingMiniPlayer';
 import { PwaRegister } from '../components/PwaRegister';
+import { SocialLinks } from '../components/SocialLinks';
+import { SOCIAL_LINKS } from '../lib/site';
+import { Analytics } from '@vercel/analytics/next';
 import { getActiveBreakingAlert } from '../lib/news-service';
 
 export const metadata: Metadata = {
@@ -101,14 +104,7 @@ export default async function RootLayout({
         width: 340,
         height: 76,
       },
-      sameAs: [
-        'https://x.com/prolificnews',
-        'https://t.me/prolificnews',
-        'https://linkedin.com/company/prolificnews',
-        'https://facebook.com/prolificnews',
-        'https://bsky.app/profile/prolific.news',
-        'https://threads.net/@prolificnews',
-      ],
+      sameAs: SOCIAL_LINKS.map((s) => s.url),
     },
     {
       '@context': 'https://schema.org',
@@ -158,6 +154,7 @@ export default async function RootLayout({
           {children}
         </div>
         <FloatingMiniPlayer />
+        <Analytics />
 
         {/* Global Footer */}
         <footer className="bg-[#001A2C] text-gray-300 border-t-4 border-[#002B49] py-12 px-4 mt-12">
@@ -174,37 +171,12 @@ export default async function RootLayout({
                 Prolific News Network (PNN) is a 24/7 multimedia digital broadcast news platform delivering verified breaking dispatches, algorithmic high-value news curation, regional coverage across Africa, Asia, and Latin America, and global financial intelligence.
               </p>
               <div className="flex items-center gap-2 flex-wrap pt-1">
+                <SocialLinks className="text-[11px] font-bold px-2.5 py-1 rounded" />
                 <a
-                  href="https://x.com/prolificnews"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-black hover:bg-gray-900 text-white text-[11px] font-bold px-2.5 py-1 rounded border border-white/15 transition"
+                  href="/feed.xml"
+                  className="bg-[#002B49] text-[#FFCC00] text-[11px] font-bold px-2.5 py-1 rounded border border-white/15 hover:opacity-90 transition"
                 >
-                  X @prolificnews
-                </a>
-                <a
-                  href="https://t.me/prolificnews"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-[#0088cc] hover:opacity-90 text-white text-[11px] font-bold px-2.5 py-1 rounded transition"
-                >
-                  Telegram
-                </a>
-                <a
-                  href="https://linkedin.com/company/prolificnews"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-[#0A66C2] hover:opacity-90 text-white text-[11px] font-bold px-2.5 py-1 rounded transition"
-                >
-                  LinkedIn
-                </a>
-                <a
-                  href="https://bsky.app/profile/prolific.news"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-[#0285FF] hover:opacity-90 text-white text-[11px] font-bold px-2.5 py-1 rounded transition"
-                >
-                  Bluesky
+                  RSS
                 </a>
               </div>
               <p className="text-[11px] text-gray-500 pt-1">
@@ -251,6 +223,7 @@ export default async function RootLayout({
                 <li><a href="/news-sitemap.xml" className="hover:text-white transition">Google News Sitemap</a></li>
                 <li><a href="/sitemap.xml" className="hover:text-white transition">XML Site Index</a></li>
                 <li><Link href="/about" className="hover:text-white transition">About Prolific News</Link></li>
+                <li><Link href="/editorial-policy" className="hover:text-white transition">Editorial Policy & Corrections</Link></li>
                 <li><Link href="/contact" className="hover:text-white transition">Contact & Press Tips</Link></li>
                 <li><Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
                 <li><Link href="/terms" className="hover:text-white transition">Terms of Service</Link></li>

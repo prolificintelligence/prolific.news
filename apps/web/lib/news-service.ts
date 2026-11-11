@@ -59,14 +59,13 @@ export function cleanSubtitleSafely(
 
 export function cleanContentSafely(content: string, cleanTitle: string, cleanSub: string): string {
   if (!content) {
-    return `<p class="text-xl font-serif text-gray-800 leading-relaxed mb-6 font-semibold">${cleanSub}</p><p>PROLIFIC NEWSROOM — Fast-moving developments are unfolding. Stay with Prolific News Network for continuous updates and live broadcast analysis.</p>`;
+    return `<p class="text-xl font-serif text-gray-800 leading-relaxed mb-6 font-semibold">${cleanSub}</p><p>Read the full report at the original source.</p>`;
   }
   if (content.includes('<ol') || content.includes('&lt;ol') || content.includes('href="https://news.google')) {
     return `
       <p class="text-xl font-serif text-gray-800 leading-relaxed mb-6 font-semibold">${cleanSub}</p>
-      <p class="mb-4">PROLIFIC NEWSROOM — Fast-moving developments are unfolding according to reports confirmed by wire correspondents. Government, regulatory, and market monitors are assessing impacts as emergency advisories are issued.</p>
-      <p class="mb-4">“Our correspondents in the field are tracking each development as new reports are confirmed,” noted senior network editors during a special broadcast briefing.</p>
-      <p class="mb-4">Stay with Prolific News Network for continuous updates and live broadcast analysis streaming 24/7 on Prolific Watch Hub.</p>
+      <p class="mb-4">This story is summarised from the original publisher. Follow the source link for the full report.</p>
+      <p class="mb-4">Prolific News Network summarises and links to the original reporting.</p>
     `;
   }
   return content;
@@ -106,8 +105,8 @@ export async function getLeadAndFeaturedArticles(): Promise<{
           category,
           tags: (article.tags as string[]) || [],
           author: {
-            id: author?.id || 'auth-sterling',
-            name: author?.name || 'Jonathan Sterling',
+            id: author?.id || 'auth-ed-board',
+            name: author?.name || 'Prolific News Desk',
             role: author?.role || 'Senior Newsroom Correspondent',
             avatarUrl: author?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
           },
@@ -154,15 +153,15 @@ export async function getLeadAndFeaturedArticles(): Promise<{
     category: 'Politics',
     tags: ['Geneva Summit', 'National Security', 'Defense', 'Congress'],
     author: {
-      id: 'auth-sterling',
-      name: 'Jonathan Sterling',
+      id: 'auth-ed-board',
+      name: 'Prolific News Desk',
       role: 'Chief Washington Correspondent',
     },
     leadMedia: {
       type: 'VIDEO',
       url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
       thumbnailUrl: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
-      caption: 'Jonathan Sterling reports live from the international convention center.',
+      caption: 'Photo: Prolific News Desk',
     },
     isLeadHero: true,
     isBreaking: true,
@@ -275,8 +274,8 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
         category,
         tags: (article.tags as string[]) || [],
         author: {
-          id: author?.id || 'auth-sterling',
-          name: author?.name || 'Jonathan Sterling',
+          id: author?.id || 'auth-ed-board',
+          name: author?.name || 'Prolific News Desk',
           role: author?.role || 'Senior Newsroom Correspondent',
           avatarUrl: author?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
         },
@@ -330,7 +329,7 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
         category: matchedWire.category,
         tags: [matchedWire.category, matchedWire.source, 'Live Wire'],
         author: {
-          id: 'auth-sterling',
+          id: 'auth-ed-board',
           name: `${matchedWire.source} News Service`,
           role: 'Wire Correspondent',
           avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
@@ -498,8 +497,8 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Categ
           category: meta.name,
           tags: (article.tags as string[]) || [meta.name],
           author: {
-            id: author?.id || 'auth-sterling',
-            name: author?.name || 'Jonathan Sterling',
+            id: author?.id || 'auth-ed-board',
+            name: author?.name || 'Prolific News Desk',
             role: author?.role || 'Senior Newsroom Correspondent',
             avatarUrl: author?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
           },
@@ -584,7 +583,7 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Categ
           category: meta.name,
           tags: [meta.name, wire.source, 'Live Coverage'],
           author: {
-            id: 'auth-sterling',
+            id: 'auth-ed-board',
             name: `${wire.source} Reporting Desk`,
             role: `${meta.name} Correspondent`,
             avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
@@ -632,7 +631,7 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Categ
     category: meta.name,
     tags: [meta.name, 'Developing Story'],
     author: {
-      id: 'auth-sterling',
+      id: 'auth-ed-board',
       name: 'Prolific Editorial Board',
       role: 'Senior Newsroom Staff',
     },
@@ -753,7 +752,7 @@ export async function getArchivedArticles(options: ArchiveQueryOptions = {}): Pr
         category,
         tags: (article.tags as string[]) || [],
         author: {
-          id: author?.id || 'auth-sterling',
+          id: author?.id || 'auth-ed-board',
           name: author?.name || 'Prolific Editorial Archive',
           role: author?.role || 'Senior Newsroom Staff',
           avatarUrl: author?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',

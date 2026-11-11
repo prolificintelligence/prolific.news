@@ -10,13 +10,14 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@prolific/types": "workspace:*",
-    "@prolific/ui": "workspace:*",
     "@prolific/db": "workspace:*",
     "@prolific/jobs": "workspace:*",
-    "inngest": "^3.31.8",
+    "@prolific/types": "workspace:*",
+    "@prolific/ui": "workspace:*",
+    "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
     "hls.js": "^1.5.20",
+    "inngest": "^3.31.8",
     "lucide-react": "^0.475.0",
     "next": "^15.5.28",
     "react": "^19.0.0",

@@ -3,13 +3,17 @@ import {
   getRecentSocialDispatches,
   syndicateArticleToSocials,
   autoSyndicateHighValueArticles,
+  configuredPlatforms,
   OFFICIAL_SOCIAL_HANDLES,
 } from '@prolific/jobs';
 import { createDb, articles, eq, desc } from '@prolific/db';
+import { requireAdmin } from '../../../lib/auth/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(Number(searchParams.get('limit') || 48), 120);
@@ -41,6 +45,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       ok: true,
       officialHandles: OFFICIAL_SOCIAL_HANDLES,
+      activeChannels: configuredPlatforms(),
       posts,
       recentArticles,
     });
@@ -54,6 +59,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
 
