@@ -1,6 +1,11 @@
 import https from 'node:https';
 
-const VERCEL_TOKEN = process.env.VERCEL_TOKEN || '';
+import fs from 'node:fs';
+
+let VERCEL_TOKEN = process.env.VERCEL_TOKEN || '';
+if (!VERCEL_TOKEN && fs.existsSync('D:/Projects/secrets/Prolific-Intelligence-Vercel.md')) {
+  VERCEL_TOKEN = fs.readFileSync('D:/Projects/secrets/Prolific-Intelligence-Vercel.md', 'utf8').trim();
+}
 const TEAM_ID = 'team_gqrZowpHHbERjgyu6YxjWwq3';
 const CLOUDFLARE_IP = '64.239.109.129';
 
