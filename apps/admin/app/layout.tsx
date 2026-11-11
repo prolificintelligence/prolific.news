@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import './globals.css';
-import { Newspaper, Radio, Flame, ShieldAlert, FileText, Settings, Sparkles, Share2, BarChart3 } from 'lucide-react';
+import { Newspaper, Radio, Flame, ShieldAlert, FileText, Settings, Sparkles, Share2, BarChart3, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { getAdminSession } from '../lib/auth/server';
 import { SignOutButton } from '../components/SignOutButton';
@@ -108,6 +108,10 @@ export default async function AdminLayout({
               <Link href="/analytics" className="hover:text-white transition flex items-center gap-1.5">
                 <BarChart3 className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Audience & Analytics</span>
+              </Link>
+              <Link href="/inquiries" className="hover:text-white transition flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-amber-400" />
+                <span>Desk Inquiries</span>
               </Link>
             </nav>
           </div>

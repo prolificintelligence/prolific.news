@@ -17,8 +17,8 @@ export default function TermsPage() {
       <h2>Third-party content</h2>
       <p>
         Headlines, summaries and images belong to their respective publishers and are linked to their sources.
-        Publishers who want content changed or removed can contact{' '}
-        <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>.
+        Publishers who want content changed or removed can contact our Legal & Rights desk at{' '}
+        <a href={`mailto:${SITE.departments.legal.email}`}>{SITE.departments.legal.email}</a>.
       </p>
       <h2>Acceptable use</h2>
       <ul>

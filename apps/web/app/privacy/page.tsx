@@ -41,8 +41,8 @@ export default function PrivacyPage() {
       <p>We do not sell personal data. Service providers (hosting, email delivery) process data only on our behalf.</p>
       <h2>Your choices</h2>
       <p>
-        You can unsubscribe from any email, and request access to or deletion of your data, by contacting{' '}
-        <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>.
+        You can unsubscribe from any email, and request access to or deletion of your data, by contacting our Data Privacy officer at{' '}
+        <a href={`mailto:${SITE.departments.legal.email}`}>{SITE.departments.legal.email}</a>.
       </p>
     </InfoPage>
   );

@@ -87,3 +87,15 @@ export const socialPosts = pgTable('social_posts', {
   publishedAt: timestamp('published_at', { withTimezone: true }).defaultNow().notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
+
+export const contactInquiries = pgTable('contact_inquiries', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  department: varchar('department', { length: 64 }).notNull(), // 'editorial', 'partnerships', 'wire', 'support', 'legal'
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  subject: text('subject').notNull(),
+  message: text('message').notNull(),
+  status: varchar('status', { length: 32 }).default('NEW').notNull(), // 'NEW', 'REVIEWED', 'RESOLVED', 'SPAM'
+  ipHash: varchar('ip_hash', { length: 64 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});

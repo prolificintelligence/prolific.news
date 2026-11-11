@@ -76,7 +76,7 @@ export async function POST(req: Request) {
                 <p style="margin: 4px 0;"><strong>Company:</strong> ${companyName}</p>
               </div>
               <p>Our editorial desk reviews commercial releases for formatting and compliance before publishing to the network and Google News sitemaps.</p>
-              <p style="color: #6B7280; font-size: 12px; margin-top: 24px;">Prolific News Commercial Partnerships Desk • partnerships@prolific.news</p>
+              <p style="color: #6B7280; font-size: 12px; margin-top: 24px;">Prolific News Commercial Wire Desk • wire@prolific.news</p>
             </div>
           `,
         }),

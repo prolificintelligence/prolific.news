@@ -195,6 +195,13 @@ export default function PlusPage() {
             </form>
           )}
         </div>
+
+        <p className="text-center text-xs text-gray-500">
+          Need billing or account support? Reach our reader relations team at{' '}
+          <a href="mailto:support@prolific.news" className="text-gray-400 underline hover:text-white">
+            support@prolific.news
+          </a>
+        </p>
       </div>
     </div>
   );
