@@ -10,6 +10,7 @@ import {
   Send,
   Copy,
 } from 'lucide-react';
+import { trackTelemetryEvent } from './TelemetryTracker';
 
 interface ArticleEngagementBarProps {
   slug: string;
@@ -68,6 +69,7 @@ export function ArticleEngagementBar({
     utterance.onerror = () => setIsPlayingAudio(false);
 
     setIsPlayingAudio(true);
+    trackTelemetryEvent('audio_briefing_play', slug, { category, title });
     window.speechSynthesis.speak(utterance);
   };
 
@@ -76,19 +78,23 @@ export function ArticleEngagementBar({
       const saved: string[] = JSON.parse(
         localStorage.getItem('pnn_saved_articles') || '[]'
       );
-      const next = saved.includes(slug)
-        ? saved.filter((s) => s !== slug)
-        : [...saved, slug];
+      const isSaving = !saved.includes(slug);
+      const next = isSaving
+        ? [...saved, slug]
+        : saved.filter((s) => s !== slug);
       localStorage.setItem('pnn_saved_articles', JSON.stringify(next));
-      setBookmarked(next.includes(slug));
+      setBookmarked(isSaving);
+      trackTelemetryEvent('bookmark_save', slug, { saved: isSaving });
     } catch {
       // ignore
     }
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
+    const copyUrl = `${shareUrl}?utm_source=copy_link&utm_medium=reader_share`;
+    navigator.clipboard.writeText(copyUrl);
     setCopied(true);
+    trackTelemetryEvent('share_click', slug, { platform: 'COPY_LINK' });
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -131,20 +137,34 @@ export function ArticleEngagementBar({
         <a
           href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
             shareText
-          )}&url=${encodeURIComponent(shareUrl)}`}
+          )}&url=${encodeURIComponent(`${shareUrl}?utm_source=twitter&utm_medium=reader_share`)}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackTelemetryEvent('share_click', slug, { platform: 'X' })}
           className="bg-black hover:bg-gray-800 text-white text-[11px] font-bold px-2.5 py-1.5 rounded transition"
           title="Share on X (@prolificnews)"
         >
           X
         </a>
         <a
+          href={`https://bsky.app/intent/compose?text=${encodeURIComponent(
+            `${shareText} ${shareUrl}?utm_source=bluesky&utm_medium=reader_share`
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => trackTelemetryEvent('share_click', slug, { platform: 'BLUESKY' })}
+          className="bg-[#0285FF] hover:opacity-90 text-white text-[11px] font-bold px-2.5 py-1.5 rounded flex items-center gap-1 transition"
+          title="Share on Bluesky"
+        >
+          Bluesky
+        </a>
+        <a
           href={`https://t.me/share/url?url=${encodeURIComponent(
-            shareUrl
+            `${shareUrl}?utm_source=telegram&utm_medium=reader_share`
           )}&text=${encodeURIComponent(shareText)}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackTelemetryEvent('share_click', slug, { platform: 'TELEGRAM' })}
           className="bg-[#0088cc] hover:opacity-90 text-white text-[11px] font-bold px-2.5 py-1.5 rounded flex items-center gap-1 transition"
           title="Share on Telegram"
         >
@@ -152,10 +172,11 @@ export function ArticleEngagementBar({
         </a>
         <a
           href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-            `${shareText} ${shareUrl}`
+            `${shareText} ${shareUrl}?utm_source=whatsapp&utm_medium=reader_share`
           )}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackTelemetryEvent('share_click', slug, { platform: 'WHATSAPP' })}
           className="bg-[#25D366] hover:opacity-90 text-white text-[11px] font-bold px-2.5 py-1.5 rounded transition"
           title="Share on WhatsApp"
         >
@@ -163,10 +184,11 @@ export function ArticleEngagementBar({
         </a>
         <a
           href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-            shareUrl
+            `${shareUrl}?utm_source=linkedin&utm_medium=reader_share`
           )}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackTelemetryEvent('share_click', slug, { platform: 'LINKEDIN' })}
           className="bg-[#0A66C2] hover:opacity-90 text-white text-[11px] font-bold px-2.5 py-1.5 rounded transition"
           title="Share on LinkedIn"
         >

@@ -10,6 +10,7 @@ import { PwaRegister } from '../components/PwaRegister';
 import { SocialLinks } from '../components/SocialLinks';
 import { SOCIAL_LINKS } from '../lib/site';
 import { Analytics } from '@vercel/analytics/next';
+import { TelemetryTracker } from '../components/TelemetryTracker';
 import { getActiveBreakingAlert } from '../lib/news-service';
 
 export const metadata: Metadata = {
@@ -154,6 +155,7 @@ export default async function RootLayout({
           {children}
         </div>
         <FloatingMiniPlayer />
+        <TelemetryTracker />
         <Analytics />
 
         {/* Global Footer */}
