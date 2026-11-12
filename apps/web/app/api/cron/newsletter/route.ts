@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'node:crypto';
-import { sendDailyMorningBriefing } from '@prolific/jobs';
+import { inngest, sendDailyMorningBriefing } from '@prolific/jobs';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -17,7 +17,7 @@ function authorized(request: Request): boolean {
 
 /**
  * Scheduled Morning Intelligence Briefing Dispatcher.
- * Triggered daily (e.g. 07:00 UTC) via Vercel Cron or GitHub Actions.
+ * Dispatches to Inngest when `INNGEST_EVENT_KEY` is configured (`?inline=1` forces synchronous execution).
  */
 export async function GET(request: Request) {
   if (!authorized(request)) {
@@ -25,8 +25,24 @@ export async function GET(request: Request) {
   }
 
   try {
+    const { searchParams } = new URL(request.url);
+    if (process.env.INNGEST_EVENT_KEY && searchParams.get('inline') !== '1') {
+      const dispatched = await inngest.send({
+        name: 'newsletter/morning.requested',
+        data: { triggeredAt: new Date().toISOString() },
+      });
+      return NextResponse.json({
+        ok: true,
+        queued: 'inngest',
+        event: 'newsletter/morning.requested',
+        ids: dispatched.ids,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     const result = await sendDailyMorningBriefing();
     return NextResponse.json({
+      queued: 'inline',
       timestamp: new Date().toISOString(),
       ...result,
     });

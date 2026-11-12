@@ -920,6 +920,22 @@ export async function autoPromoteFreshWireItems(
   return { promoted, byCategory };
 }
 
+export async function ingestFeedsToNeonDb(tier?: 1 | 2 | 3): Promise<{ inserted: number; total: number }> {
+  const wireNews = tier ? await pullTieredNewsFeed(tier) : await pullRealNewsFeed();
+  const inserted = await insertWireArticles(wireNews);
+  return { inserted, total: wireNews.length };
+}
+
+export async function promoteAndRevalidateWireItems(
+  perCategory = 3
+): Promise<{ promoted: number; byCategory: Record<string, number> }> {
+  const result = await autoPromoteFreshWireItems(perCategory);
+  if (result.promoted > 0) {
+    await revalidateEdge();
+  }
+  return result;
+}
+
 export async function syncTieredFeedsToNeonDb(tier: 1 | 2 | 3): Promise<{ inserted: number; total: number; tier: number; promoted: number }> {
   const wireNews = await pullTieredNewsFeed(tier);
   const inserted = await insertWireArticles(wireNews);

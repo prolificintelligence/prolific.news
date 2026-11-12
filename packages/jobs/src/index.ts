@@ -1,10 +1,11 @@
 import { Inngest } from 'inngest';
 import {
-  syncWireFeedsToNeonDb,
-  syncTieredFeedsToNeonDb,
+  ingestFeedsToNeonDb,
+  promoteAndRevalidateWireItems,
   archiveOldContent,
 } from './wire-puller';
 import { autoSyndicateHighValueArticles } from './social-distributor';
+import { sendDailyMorningBriefing } from './newsletter-sender';
 
 export * from './wire-puller';
 export * from './social-distributor';
@@ -14,48 +15,62 @@ export { dispatchToPlatform } from './social-channels';
 export const inngest = new Inngest({ id: 'prolific-news-platform' });
 
 /**
- * Full Wire Ingestion (triggered via event to avoid overlapping with GitHub Actions cron)
+ * Full Wire Ingestion (chunked into bounded steps so heavy runs never hit 60s function timeouts)
  */
 export const wireIngestCron = inngest.createFunction(
   { id: 'cron-wire-ingest', concurrency: { limit: 1 }, retries: 1 },
   { event: 'wire/full.requested' },
-  async ({ step }) => {
-    const result = await step.run('sync-wire-feeds', async () => {
-      return await syncWireFeedsToNeonDb();
-    });
+  async ({ event, step }) => {
+    const ingest = await step.run('ingest-feeds', () => ingestFeedsToNeonDb());
+    const promo = await step.run('promote-and-revalidate', () => promoteAndRevalidateWireItems(3));
+    const social =
+      event.data?.social === false
+        ? null
+        : await step.run('syndicate-social', () => autoSyndicateHighValueArticles(2));
 
-    return { edition: 'full-cadence', processed: result.total, inserted: result.inserted, promoted: result.promoted };
+    return {
+      edition: 'full-cadence',
+      processed: ingest.total,
+      inserted: ingest.inserted,
+      promoted: promo.promoted,
+      social,
+    };
   }
 );
 
 /**
  * On-Demand Tier 1 Ingestion (Breaking Desk, Politics, Markets, Africa, Asia, LatAm)
- * Scheduled ingestion is consolidated in GitHub Actions to eliminate redundant Vercel CPU usage.
+ * Scheduled ingestion is consolidated in GitHub Actions and dispatched into durable Inngest steps.
  */
 export const wireIngestTier1Cron = inngest.createFunction(
   { id: 'cron-wire-tier1', concurrency: { limit: 1 }, retries: 1 },
   { event: 'wire/tier1.requested' },
-  async ({ step }) => {
-    const result = await step.run('sync-tier1-feeds', async () => {
-      return await syncTieredFeedsToNeonDb(1);
-    });
+  async ({ event, step }) => {
+    const ingest = await step.run('ingest-tier1-feeds', () => ingestFeedsToNeonDb(1));
+    const promo = await step.run('promote-and-revalidate-tier1', () => promoteAndRevalidateWireItems(4));
+    const social =
+      event.data?.social === false
+        ? null
+        : await step.run('syndicate-social', () => autoSyndicateHighValueArticles(2));
 
-    return { tier: 1, processed: result.total, inserted: result.inserted, promoted: result.promoted };
+    return {
+      tier: 1,
+      processed: ingest.total,
+      inserted: ingest.inserted,
+      promoted: promo.promoted,
+      social,
+    };
   }
 );
 
 /**
  * On-Demand Social Distribution (max 2 stories per run, deduplicated per channel).
- * Triggered automatically by the consolidated GitHub Actions cron (`social=1`) or manually via event.
  */
 export const socialDistributionCron = inngest.createFunction(
   { id: 'cron-social-distribution', concurrency: { limit: 1 }, retries: 1 },
   { event: 'social/syndicate.requested' },
   async ({ step }) => {
-    const result = await step.run('auto-syndicate-social', async () => {
-      return await autoSyndicateHighValueArticles(2);
-    });
-
+    const result = await step.run('auto-syndicate-social', () => autoSyndicateHighValueArticles(2));
     return result;
   }
 );
@@ -67,11 +82,10 @@ export const wireIngestTier2Cron = inngest.createFunction(
   { id: 'cron-wire-tier2', concurrency: { limit: 1 }, retries: 1 },
   { event: 'wire/tier2.requested' },
   async ({ step }) => {
-    const result = await step.run('sync-tier2-feeds', async () => {
-      return await syncTieredFeedsToNeonDb(2);
-    });
+    const ingest = await step.run('ingest-tier2-feeds', () => ingestFeedsToNeonDb(2));
+    const promo = await step.run('promote-and-revalidate-tier2', () => promoteAndRevalidateWireItems(2));
 
-    return { tier: 2, processed: result.total, inserted: result.inserted, promoted: result.promoted };
+    return { tier: 2, processed: ingest.total, inserted: ingest.inserted, promoted: promo.promoted };
   }
 );
 
@@ -82,11 +96,21 @@ export const wireIngestTier3Cron = inngest.createFunction(
   { id: 'cron-wire-tier3', concurrency: { limit: 1 }, retries: 1 },
   { event: 'wire/tier3.requested' },
   async ({ step }) => {
-    const result = await step.run('sync-tier3-feeds', async () => {
-      return await syncTieredFeedsToNeonDb(3);
-    });
+    const ingest = await step.run('ingest-tier3-feeds', () => ingestFeedsToNeonDb(3));
+    const promo = await step.run('promote-and-revalidate-tier3', () => promoteAndRevalidateWireItems(2));
 
-    return { tier: 3, processed: result.total, inserted: result.inserted, promoted: result.promoted };
+    return { tier: 3, processed: ingest.total, inserted: ingest.inserted, promoted: promo.promoted };
+  }
+);
+
+/**
+ * Daily Morning Briefing Newsletter (Daily at 07:00 UTC or via event)
+ */
+export const dailyNewsletterCron = inngest.createFunction(
+  { id: 'cron-daily-newsletter', concurrency: { limit: 1 }, retries: 1 },
+  [{ cron: '0 7 * * *' }, { event: 'newsletter/morning.requested' }],
+  async ({ step }) => {
+    return await step.run('send-morning-briefing', () => sendDailyMorningBriefing());
   }
 );
 
@@ -109,46 +133,12 @@ export const contentLifecycleCron = inngest.createFunction(
   }
 );
 
-// Function 2: Real-time Live Stream Transcription (Whisper Speech-to-Text)
-export const liveAudioTranscribe = inngest.createFunction(
-  { id: 'transcribe-broadcast-segment' },
-  { event: 'broadcast/segment.ready' },
-  async ({ event, step }) => {
-    const transcript = await step.run('whisper-speech-to-text', async () => {
-      return {
-        segmentId: event.data.segmentId,
-        text: 'Live spoken transcript excerpt from broadcast stream...',
-        speakers: ['Brett Adams', 'Guest Senator'],
-      };
-    });
-
-    await step.run('sync-quote-library', async () => {
-      return { indexed: true, transcriptId: transcript.segmentId };
-    });
-
-    return transcript;
-  }
-);
-
-// Function 3: Article Search Indexing to VPS Meilisearch
-export const syncSearchIndex = inngest.createFunction(
-  { id: 'sync-article-search' },
-  { event: 'article/published' },
-  async ({ event, step }) => {
-    await step.run('push-to-meilisearch', async () => {
-      const vpsUrl = process.env.MEILI_HOST || 'http://localhost:7700';
-      return { articleId: event.data.articleId, indexedAt: new Date().toISOString() };
-    });
-  }
-);
-
 export const inngestFunctions = [
   wireIngestCron,
   wireIngestTier1Cron,
   wireIngestTier2Cron,
   wireIngestTier3Cron,
   socialDistributionCron,
+  dailyNewsletterCron,
   contentLifecycleCron,
-  liveAudioTranscribe,
-  syncSearchIndex,
 ];
