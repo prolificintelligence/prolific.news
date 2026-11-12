@@ -2,23 +2,28 @@ name: Prolific 24/7 Automated News & Social Cron
 
 on:
   schedule:
-    # Run every 20 minutes continuously 24/7
-    - cron: '*/20 * * * *'
+    # Consolidated 2-hour cadence (12x/day) to minimize serverless CPU usage on Vercel Hobby
+    - cron: '0 */2 * * *'
   workflow_dispatch:
 
 jobs:
   ingest-and-syndicate:
-    name: Rapid Wire Ingestion & Social Syndication
+    name: Consolidated Wire Ingestion & Social Syndication
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
-      - name: Trigger Tier-1 Wire Ingest & Social Syndication
+      - name: Trigger Wire Ingest & Social Syndication
         run: |
-          echo "Triggering Prolific News autonomous 20-minute wire ingest & syndication..."
+          UTC_HOUR=$(date -u +%H)
+          MODE="tier1"
+          if [ "$UTC_HOUR" = "06" ]; then
+            MODE="full"
+          fi
+          echo "Triggering Prolific News wire ingest (mode=$MODE) & syndication..."
           HTTP_STATUS=$(curl -s -o /tmp/cron-response.json -w "%{http_code}" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "https://prolific.news/api/cron/ingest?mode=tier1&social=1")
+            "https://prolific.news/api/cron/ingest?mode=${MODE}&social=1")
 
           echo "Response HTTP Status: $HTTP_STATUS"
           cat /tmp/cron-response.json || true

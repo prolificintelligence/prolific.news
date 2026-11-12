@@ -6,7 +6,7 @@ import {
   buildYouTubeNoCookieEmbedUrl,
 } from '../../../../lib/video-catalog';
 
-export const dynamic = 'force-dynamic'; // Resolved at runtime with CDN s-maxage=300 caching
+export const revalidate = 900; // Resolved at runtime with 15-min CDN caching
 
 interface ResolvedStreamPayload {
   mode: 'youtube-live' | 'mp4-fallback';
@@ -68,7 +68,7 @@ export async function GET() {
           };
           return NextResponse.json(payload, {
             headers: {
-              'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+              'Cache-Control': 'public, max-age=120, s-maxage=900, stale-while-revalidate=1800',
             },
           });
         }
@@ -90,7 +90,7 @@ export async function GET() {
     };
     return NextResponse.json(payload, {
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        'Cache-Control': 'public, max-age=120, s-maxage=900, stale-while-revalidate=1800',
       },
     });
   }

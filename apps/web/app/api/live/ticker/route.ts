@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getLatestWireBulletins, getActiveBreakingAlert } from '../../../../lib/news-service';
 import type { MarketTickerItem } from '@prolific/types';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 180;
 
 async function fetchLiveMarketData(): Promise<MarketTickerItem[]> {
   const fallback: MarketTickerItem[] = [
@@ -135,7 +135,7 @@ export async function GET() {
       },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+          'Cache-Control': 'public, max-age=60, s-maxage=180, stale-while-revalidate=300',
         },
       }
     );

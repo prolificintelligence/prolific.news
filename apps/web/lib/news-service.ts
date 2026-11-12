@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createDb, articles, authors, categories, wireItems, breakingAlerts, eq, desc, and, gte, lte, or, ilike, sql } from '@prolific/db';
 import { Article, BreakingAlert } from '@prolific/types';
 
@@ -71,10 +72,10 @@ export function cleanContentSafely(content: string, cleanTitle: string, cleanSub
   return content;
 }
 
-export async function getLeadAndFeaturedArticles(): Promise<{
+export const getLeadAndFeaturedArticles = cache(async (): Promise<{
   leadArticle: Article;
   centerArticles: Article[];
-}> {
+}> => {
   try {
     const db = createDb();
     const dbArticles = await db
@@ -172,11 +173,11 @@ export async function getLeadAndFeaturedArticles(): Promise<{
   };
 
   return { leadArticle: fallbackLead, centerArticles: [] };
-}
+});
 
-export async function getLatestWireBulletins(limit = 12): Promise<
+export const getLatestWireBulletins = cache(async (limit = 12): Promise<
   Array<{ id: string; title: string; category: string; timeAgo: string; slug: string }>
-> {
+> => {
   try {
     const db = createDb();
     const rows = await db
@@ -214,9 +215,9 @@ export async function getLatestWireBulletins(limit = 12): Promise<
     { id: 'w3', title: 'Supreme Court agrees to hear landmark commercial patent case on neural computing chips', category: 'Legal', timeAgo: '28m ago', slug: 'supreme-court-neural-patent' },
     { id: 'w4', title: 'Space agency confirms heavy-lift rocket rollout ahead of moon orbital launch window', category: 'Tech', timeAgo: '41m ago', slug: 'heavy-lift-rocket-rollout' },
   ];
-}
+});
 
-export async function getActiveBreakingAlert(): Promise<BreakingAlert | null> {
+export const getActiveBreakingAlert = cache(async (): Promise<BreakingAlert | null> => {
   try {
     const db = createDb();
     const [row] = await db
@@ -241,9 +242,9 @@ export async function getActiveBreakingAlert(): Promise<BreakingAlert | null> {
   }
 
   return null;
-}
+});
 
-export async function getArticleBySlug(slug: string): Promise<Article | null> {
+export const getArticleBySlug = cache(async (slug: string): Promise<Article | null> => {
   try {
     const db = createDb();
     // 1. Check articles table
@@ -353,7 +354,7 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
   }
 
   return null;
-}
+});
 
 export interface CategoryPageData {
   categoryInfo: {
@@ -442,7 +443,7 @@ export const CATEGORY_METADATA: Record<string, { id: string; name: string; descr
   },
 };
 
-export async function getArticlesByCategory(categorySlug: string): Promise<CategoryPageData> {
+export const getArticlesByCategory = cache(async (categorySlug: string): Promise<CategoryPageData> => {
   const normalizedSlug = categorySlug.toLowerCase().trim();
   const meta = CATEGORY_METADATA[normalizedSlug] || {
     id: `cat-${normalizedSlug}`,
@@ -653,7 +654,7 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Categ
     secondaryArticles: [],
     wireBulletins: [],
   };
-}
+});
 
 export interface ArchiveQueryOptions {
   category?: string;

@@ -14,32 +14,27 @@ export { dispatchToPlatform } from './social-channels';
 export const inngest = new Inngest({ id: 'prolific-news-platform' });
 
 /**
- * Universal News Cadence: The 4-Hour News Edition (6 times a day)
- * Schedule: 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC
- * 
- * Pulls all registered feeds, deduplicates wire dispatches, auto-promotes the
- * freshest articles across all categories into the published articles table,
- * syndicates high-value articles to social channels, and purges Vercel Edge caches.
+ * Full Wire Ingestion (triggered via event to avoid overlapping with GitHub Actions cron)
  */
 export const wireIngestCron = inngest.createFunction(
   { id: 'cron-wire-ingest', concurrency: { limit: 1 }, retries: 1 },
-  { cron: '0 */4 * * *' },
+  { event: 'wire/full.requested' },
   async ({ step }) => {
     const result = await step.run('sync-wire-feeds', async () => {
       return await syncWireFeedsToNeonDb();
     });
 
-    return { edition: '4-hour-cadence', processed: result.total, inserted: result.inserted, promoted: result.promoted };
+    return { edition: 'full-cadence', processed: result.total, inserted: result.inserted, promoted: result.promoted };
   }
 );
 
 /**
- * Rapid 30-Minute Tier 1 Ingestion (Breaking Desk, Politics, Markets, Africa, Asia, LatAm)
- * Keeps top-of-page lead stories and regional bureaus continuously fresh.
+ * On-Demand Tier 1 Ingestion (Breaking Desk, Politics, Markets, Africa, Asia, LatAm)
+ * Scheduled ingestion is consolidated in GitHub Actions to eliminate redundant Vercel CPU usage.
  */
 export const wireIngestTier1Cron = inngest.createFunction(
   { id: 'cron-wire-tier1', concurrency: { limit: 1 }, retries: 1 },
-  { cron: '*/30 * * * *' },
+  { event: 'wire/tier1.requested' },
   async ({ step }) => {
     const result = await step.run('sync-tier1-feeds', async () => {
       return await syncTieredFeedsToNeonDb(1);
@@ -50,12 +45,12 @@ export const wireIngestTier1Cron = inngest.createFunction(
 );
 
 /**
- * Automated Social Distribution (hourly, max 2 stories per run, deduplicated per channel).
- * Posts only to channels that have credentials configured (Telegram, Bluesky, Mastodon).
+ * On-Demand Social Distribution (max 2 stories per run, deduplicated per channel).
+ * Triggered automatically by the consolidated GitHub Actions cron (`social=1`) or manually via event.
  */
 export const socialDistributionCron = inngest.createFunction(
   { id: 'cron-social-distribution', concurrency: { limit: 1 }, retries: 1 },
-  { cron: '15 * * * *' },
+  { event: 'social/syndicate.requested' },
   async ({ step }) => {
     const result = await step.run('auto-syndicate-social', async () => {
       return await autoSyndicateHighValueArticles(2);

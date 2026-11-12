@@ -128,7 +128,11 @@ export default function AdminAnalyticsDashboard() {
 
   useEffect(() => {
     fetchAnalytics();
-    const interval = setInterval(fetchAnalytics, 30000); // 30s auto-refresh
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchAnalytics();
+      }
+    }, 120000); // 2m auto-refresh when tab is visible
     return () => clearInterval(interval);
   }, [range]);
 

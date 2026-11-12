@@ -24,6 +24,7 @@ export function MarketTicker() {
   useEffect(() => {
     let mounted = true;
     const fetchMarkets = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       try {
         const res = await fetch('/api/live/ticker');
         const data = await res.json();
@@ -36,7 +37,7 @@ export function MarketTicker() {
     };
 
     fetchMarkets();
-    const interval = setInterval(fetchMarkets, 45000); // 45s refresh
+    const interval = setInterval(fetchMarkets, 180000); // 3m refresh (aligned with CDN cache)
     return () => {
       mounted = false;
       clearInterval(interval);

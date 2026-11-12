@@ -22,10 +22,11 @@ export function BreakingBanner({ initialAlert }: BreakingBannerProps) {
   );
 
   useEffect(() => {
-    // 1. Edge API polling for real-time freshness without page reloads
+    // 1. Edge-cached polling for updates only when tab is visible (3-minute cadence)
     const pollInterval = setInterval(async () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       try {
-        const res = await fetch('/api/live/ticker', { cache: 'no-store' });
+        const res = await fetch('/api/live/ticker');
         if (res.ok) {
           const data = await res.json();
           if (data && 'breakingAlert' in data) {
@@ -35,7 +36,7 @@ export function BreakingBanner({ initialAlert }: BreakingBannerProps) {
       } catch {
         // network silent ignore
       }
-    }, 25000);
+    }, 180000);
 
     // 2. Connect to VPS WebSocket gateway if configured
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL;

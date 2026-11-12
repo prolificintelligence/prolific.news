@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Calendar, Search, Filter, Archive as ArchiveIcon, Clock, ChevronRight, ChevronLeft, Newspaper, ArrowRight } from 'lucide-react';
 import { getArchivedArticles, CATEGORY_METADATA } from '../../lib/news-service';
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 interface ArchivePageProps {
   searchParams: Promise<{

@@ -6,7 +6,7 @@ import { getLeadAndFeaturedArticles, getLatestWireBulletins } from '../lib/news-
 import { PUBLIC_DOMAIN_CATALOG } from '../lib/video-catalog';
 import { VideoClip } from '@prolific/types';
 
-export const revalidate = 60; // Refresh every 60 seconds
+export const revalidate = 300; // Refresh every 5 minutes
 
 const VIDEO_CLIPS: VideoClip[] = PUBLIC_DOMAIN_CATALOG.slice(0, 3).map((item) => ({
   id: item.id,

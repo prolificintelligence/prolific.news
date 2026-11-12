@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { createDb, wireItems, articles, breakingAlerts, lt, eq, sql, desc, and, or, ilike } from '@prolific/db';
+import { createDb, wireItems, articles, breakingAlerts, lt, eq, sql, desc, and, or, ilike, inArray } from '@prolific/db';
 
 export interface WireArticle {
   id: string;
@@ -743,7 +743,8 @@ export async function revalidateEdge(paths?: string[]): Promise<void> {
     console.warn('[Revalidate] REVALIDATION_SECRET not set; skipping edge purge');
     return;
   }
-  const targets = paths && paths.length ? paths : ['/', '/archive', '/for-you', ...CATEGORY_SLUGS.map((s) => `/category/${s}`)];
+  // Only purge the homepage by default; category/archive pages refresh via ISR (revalidate = 300)
+  const targets = paths && paths.length ? paths : ['/'];
   await Promise.allSettled(
     targets.map((path) =>
       fetch(`${webUrl}/api/revalidate`, {
@@ -775,6 +776,18 @@ export async function autoPromoteFreshWireItems(
   let highestScore = 0;
   let topCandidateId = '';
 
+  const selected: Array<{
+    row: (typeof rows)[number];
+    articleId: string;
+    categoryId: string;
+    title: string;
+    summary: string;
+    slug: string;
+    valueScore: number;
+    priorityTier: number;
+    geoRegion: string;
+  }> = [];
+
   for (const r of rows) {
     const categoryId = CATEGORY_ID_MAP[(r.category || '').toLowerCase()];
     if (!categoryId) continue;
@@ -785,7 +798,7 @@ export async function autoPromoteFreshWireItems(
     const title = stripHtml(r.title);
     const summary = stripHtml(r.summary || '') || cleanOrGenerateSummary('', title, r.source, r.category);
     const slug = r.slug || slugify(title, r.id.replace('wire-', ''));
-    const label = categoryId.replace('cat-', '').toUpperCase();
+    const articleId = `art-${r.id.replace('wire-', '')}`;
 
     // Compute value score and tier
     const { valueScore, priorityTier, geoRegion } = computeValueScore(
@@ -799,60 +812,95 @@ export async function autoPromoteFreshWireItems(
 
     if (valueScore > highestScore) {
       highestScore = valueScore;
-      topCandidateId = `art-${r.id.replace('wire-', '')}`;
+      topCandidateId = articleId;
     }
 
-    const enriched = await enrichArticleContent(
+    selected.push({
+      row: r,
+      articleId,
+      categoryId,
       title,
       summary,
-      r.source,
-      r.category,
+      slug,
+      valueScore,
+      priorityTier,
       geoRegion,
-      r.link
-    );
-
-    try {
-      const inserted = await db
-        .insert(articles)
-        .values({
-          id: `art-${r.id.replace('wire-', '')}`,
-          slug,
-          title: enriched.title,
-          subtitle: enriched.subtitle,
-          keyDevelopments: enriched.keyDevelopments,
-          content: enriched.content,
-          categoryId,
-          tags: [r.category, r.source, geoRegion],
-          authorId: 'auth-ed-board',
-          leadMediaType: 'IMAGE',
-          leadMediaUrl: r.mediaUrl,
-          leadMediaCaption: `${enriched.title} — via ${r.source}.`,
-          isLeadHero: false,
-          // "Breaking" is an editorial decision and is never inferred from the score.
-          isBreaking: false,
-          status: 'PUBLISHED',
-          readTimeMinutes: enriched.readTimeMinutes,
-          valueScore,
-          priorityTier,
-          geoRegion,
-          publishedAt: r.pubDate || new Date(),
-        })
-        .onConflictDoNothing()
-        .returning({ id: articles.id });
-
-      if (inserted.length > 0) {
-        promoted++;
-        byCategory[categoryId] = (byCategory[categoryId] || 0) + 1;
-      }
-    } catch (err) {
-      console.warn('[AutoPromote] insert failed for', r.id, err);
-    }
+    });
   }
 
-  // Promote single highest value score article to isLeadHero = true
-  if (topCandidateId && highestScore >= 80) {
+  // Deduplicate BEFORE calling enrichArticleContent() so we never run LLM calls for already-published articles
+  const candidateIds = selected.map((s) => s.articleId);
+  const existingRows = candidateIds.length
+    ? await db
+        .select({ id: articles.id, isLeadHero: articles.isLeadHero })
+        .from(articles)
+        .where(inArray(articles.id, candidateIds))
+    : [];
+  const existingIds = new Set(existingRows.map((e) => e.id));
+  const currentHeroIsTop = existingRows.some((e) => e.id === topCandidateId && e.isLeadHero);
+
+  const toInsert = selected.filter((s) => !existingIds.has(s.articleId));
+
+  // Process genuinely new articles in small parallel batches (max 4 concurrent LLM enrichments)
+  const BATCH_SIZE = 4;
+  for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+    const batch = toInsert.slice(i, i + BATCH_SIZE);
+    await Promise.allSettled(
+      batch.map(async (item) => {
+        const { row: r, articleId, categoryId, title, summary, slug, valueScore, priorityTier, geoRegion } = item;
+        const enriched = await enrichArticleContent(
+          title,
+          summary,
+          r.source,
+          r.category,
+          geoRegion,
+          r.link
+        );
+
+        try {
+          const inserted = await db
+            .insert(articles)
+            .values({
+              id: articleId,
+              slug,
+              title: enriched.title,
+              subtitle: enriched.subtitle,
+              keyDevelopments: enriched.keyDevelopments,
+              content: enriched.content,
+              categoryId,
+              tags: [r.category, r.source, geoRegion],
+              authorId: 'auth-ed-board',
+              leadMediaType: 'IMAGE',
+              leadMediaUrl: r.mediaUrl,
+              leadMediaCaption: `${enriched.title} — via ${r.source}.`,
+              isLeadHero: false,
+              // "Breaking" is an editorial decision and is never inferred from the score.
+              isBreaking: false,
+              status: 'PUBLISHED',
+              readTimeMinutes: enriched.readTimeMinutes,
+              valueScore,
+              priorityTier,
+              geoRegion,
+              publishedAt: r.pubDate || new Date(),
+            })
+            .onConflictDoNothing()
+            .returning({ id: articles.id });
+
+          if (inserted.length > 0) {
+            promoted++;
+            byCategory[categoryId] = (byCategory[categoryId] || 0) + 1;
+          }
+        } catch (err) {
+          console.warn('[AutoPromote] insert failed for', r.id, err);
+        }
+      })
+    );
+  }
+
+  // Promote single highest value score article to isLeadHero = true (only when hero actually changed)
+  if (topCandidateId && highestScore >= 80 && !currentHeroIsTop) {
     try {
-      await db.update(articles).set({ isLeadHero: false });
+      await db.update(articles).set({ isLeadHero: false }).where(eq(articles.isLeadHero, true));
       await db.update(articles).set({ isLeadHero: true }).where(eq(articles.id, topCandidateId));
     } catch (err) {
       console.warn('[AutoPromote] lead hero update failed:', err);

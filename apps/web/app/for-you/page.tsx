@@ -9,7 +9,7 @@ export const metadata = {
   description: 'Customize your Prolific News Network coverage. Select regional bureaus, policy beats, and receive your personalized morning executive brief.',
 };
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export default async function ForYouPage() {
   const { leadArticle, centerArticles } = await getLeadAndFeaturedArticles();

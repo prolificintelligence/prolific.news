@@ -61,8 +61,8 @@ function TelemetryTrackerInner() {
 
   const pageViewIdRef = useRef<string>('');
   const activeSecondsRef = useRef<number>(0);
+  const flushedSecondsRef = useRef<number>(-1);
   const maxScrollRef = useRef<number>(0);
-  const lastActiveTimestampRef = useRef<number>(Date.now());
   const initialReferrerRef = useRef<string>('');
 
   useEffect(() => {
@@ -72,12 +72,20 @@ function TelemetryTrackerInner() {
   }, []);
 
   useEffect(() => {
+    // Skip automated browsers / bots to avoid unnecessary serverless telemetry writes
+    if (
+      typeof navigator !== 'undefined' &&
+      (navigator.webdriver || /bot|crawl|spider|headless|lighthouse|pingdom|preview/i.test(navigator.userAgent))
+    ) {
+      return;
+    }
+
     const sessionId = getOrCreateSessionId();
     const pageViewId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `pv_${Math.random().toString(36).slice(2)}_${Date.now()}`;
     pageViewIdRef.current = pageViewId;
     activeSecondsRef.current = 0;
+    flushedSecondsRef.current = -1;
     maxScrollRef.current = 0;
-    lastActiveTimestampRef.current = Date.now();
 
     // Derive article slug if on article page
     let articleSlug: string | undefined;
@@ -141,37 +149,37 @@ function TelemetryTrackerInner() {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
 
-    // 3. Active Dwell Time Counter
+    // 3. Local Active Dwell Time Counter (no periodic network polling)
     const timer = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
         activeSecondsRef.current += 1;
-
-        // Periodic Heartbeat every 15 seconds
-        if (activeSecondsRef.current % 15 === 0) {
-          sendHeartbeat(pageViewId, sessionId, pathname, articleSlug);
-        }
       }
     }, 1000);
 
-    // 4. Flush on tab leave / unload
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        sendHeartbeat(pageViewId, sessionId, pathname, articleSlug);
-      }
-    };
-    const handleBeforeUnload = () => {
+    // 4. Flush once on tab leave / unload (only if meaningful engagement occurred)
+    const flushOnce = () => {
+      const secs = activeSecondsRef.current;
+      if (secs < 2 && maxScrollRef.current < 10) return;
+      if (flushedSecondsRef.current === secs) return;
+      flushedSecondsRef.current = secs;
       sendHeartbeat(pageViewId, sessionId, pathname, articleSlug);
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushOnce();
+      }
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', flushOnce);
 
     return () => {
       clearInterval(timer);
       window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      sendHeartbeat(pageViewId, sessionId, pathname, articleSlug);
+      window.removeEventListener('pagehide', flushOnce);
+      flushOnce();
     };
   }, [pathname, searchParams]);
 
