@@ -16,6 +16,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { LiveStreamPlayer } from '../../components/LiveStreamPlayer';
+import { trackTelemetryEvent } from '../../components/TelemetryTracker';
 import {
   VideoStreamItem,
   FLAGSHIP_LIVE_STREAM,
@@ -89,6 +90,7 @@ function WatchTheaterContent() {
 
   const selectVideo = (doc: VideoStreamItem) => {
     setActiveVideo(doc);
+    trackTelemetryEvent('watch_stream', doc.id, { title: doc.title, mode: 'vod' });
     if (playerTopRef.current) {
       playerTopRef.current.scrollIntoView({ behavior: 'smooth' });
     }
@@ -96,6 +98,10 @@ function WatchTheaterContent() {
 
   const switchToLive = () => {
     setActiveVideo(FLAGSHIP_LIVE_STREAM);
+    trackTelemetryEvent('watch_stream', FLAGSHIP_LIVE_STREAM.id, {
+      title: FLAGSHIP_LIVE_STREAM.title,
+      mode: 'live',
+    });
     if (playerTopRef.current) {
       playerTopRef.current.scrollIntoView({ behavior: 'smooth' });
     }

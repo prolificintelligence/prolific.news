@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AlertCircle, ChevronRight } from 'lucide-react';
 import { BreakingAlert } from '@prolific/types';
+import { trackTelemetryEvent } from './TelemetryTracker';
 
 interface BreakingBannerProps {
   initialAlert?: BreakingAlert | null;
@@ -81,6 +82,13 @@ export function BreakingBanner({ initialAlert }: BreakingBannerProps) {
           </span>
           <Link
             href={alert.url}
+            onClick={() =>
+              trackTelemetryEvent('ticker_click', null, {
+                placement: 'breaking_banner',
+                url: alert.url,
+                urgency: alert.urgency,
+              })
+            }
             className="font-headline font-black text-sm md:text-base tracking-wide hover:underline uppercase leading-tight line-clamp-1"
           >
             {alert.headline}
@@ -88,6 +96,13 @@ export function BreakingBanner({ initialAlert }: BreakingBannerProps) {
         </div>
         <Link
           href={alert.url}
+          onClick={() =>
+            trackTelemetryEvent('ticker_click', null, {
+              placement: 'breaking_banner_cta',
+              url: alert.url,
+              urgency: alert.urgency,
+            })
+          }
           className="hidden lg:flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-white/90 hover:text-white whitespace-nowrap bg-black/20 hover:bg-black/30 px-3 py-1 rounded transition"
         >
           <span>Full Coverage</span>

@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { Article } from '@prolific/types';
+import { trackTelemetryEvent } from './TelemetryTracker';
 
 interface PersonalizedNewsWidgetProps {
   articles: Article[];
@@ -123,6 +124,10 @@ export function PersonalizedNewsWidget({
       if (data.success) {
         setSubscribeStatus('Subscribed! Your custom morning digest is locked in.');
         setEmail('');
+        trackTelemetryEvent('newsletter_signup', null, {
+          placement: 'personalized_widget',
+          topicsCount: selectedTopics.length,
+        });
       } else {
         setSubscribeStatus(data.error || 'Subscription failed.');
       }

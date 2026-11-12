@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Play, Flame, CheckCircle2, Share2, Globe } from 'lucide-react';
 import { Article, VideoClip } from '@prolific/types';
+import { trackTelemetryEvent } from './TelemetryTracker';
 
 interface ThreeColumnLayoutProps {
   wireArticles: Array<{ id: string; title: string; category: string; timeAgo: string; slug: string }>;
@@ -20,7 +21,7 @@ export function ThreeColumnLayout({ wireArticles, centerArticles, videoClips }: 
     if (!email || !email.includes('@')) return;
     setSubStatus('loading');
     try {
-      await fetch('/api/subscribe/personalized', {
+      const res = await fetch('/api/subscribe/personalized', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -30,6 +31,12 @@ export function ThreeColumnLayout({ wireArticles, centerArticles, videoClips }: 
           frequency: 'DAILY_MORNING',
         }),
       });
+      if (res.ok) {
+        trackTelemetryEvent('newsletter_signup', null, {
+          placement: 'left_rail_brief',
+          frequency: 'DAILY_MORNING',
+        });
+      }
       setSubStatus('done');
       setEmail('');
     } catch {

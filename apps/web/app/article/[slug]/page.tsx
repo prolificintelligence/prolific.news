@@ -165,7 +165,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Main Article Body (8 cols) */}
-        <article className="lg:col-span-8 space-y-6">
+        <article
+          className="lg:col-span-8 space-y-6"
+          data-article-body="true"
+          data-article-category={article.category}
+        >
           {/* Breadcrumb & Category */}
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500">
             <Link href="/" className="hover:text-[#CC0000]">Home</Link>
