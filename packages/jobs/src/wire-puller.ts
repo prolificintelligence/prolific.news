@@ -343,7 +343,7 @@ Output ONLY valid JSON matching this schema:
           max_tokens: 600,
           temperature: 0.2,
         }),
-        signal: AbortSignal.timeout(4500),
+        signal: AbortSignal.timeout(3500),
       });
 
       if (res.ok) {
@@ -488,7 +488,7 @@ export async function fetchLiveRssFeed(
         'User-Agent': 'ProlificNews-WireHarvester/2.0 (+https://prolific.news)',
         Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
       },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(4000),
     });
 
     if (!res.ok) {
@@ -758,7 +758,8 @@ export async function revalidateEdge(paths?: string[]): Promise<void> {
 }
 
 export async function autoPromoteFreshWireItems(
-  perCategory = 3
+  perCategory = 3,
+  maxTotal = 3
 ): Promise<{ promoted: number; byCategory: Record<string, number> }> {
   const db = createDb();
   const rows = await db
@@ -840,11 +841,14 @@ export async function autoPromoteFreshWireItems(
   const currentHeroIsTop = existingRows.some((e) => e.id === topCandidateId && e.isLeadHero);
 
   const toInsert = selected.filter((s) => !existingIds.has(s.articleId));
+  // Sort candidate promotions by valueScore descending so highest-impact/breaking stories are promoted first
+  toInsert.sort((a, b) => b.valueScore - a.valueScore);
+  const cappedToInsert = toInsert.slice(0, maxTotal);
 
-  // Process genuinely new articles in small parallel batches (max 4 concurrent LLM enrichments)
-  const BATCH_SIZE = 4;
-  for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
-    const batch = toInsert.slice(i, i + BATCH_SIZE);
+  // Process genuinely new articles in small bounded parallel batches (max 3 concurrent LLM enrichments)
+  const BATCH_SIZE = 3;
+  for (let i = 0; i < cappedToInsert.length; i += BATCH_SIZE) {
+    const batch = cappedToInsert.slice(i, i + BATCH_SIZE);
     await Promise.allSettled(
       batch.map(async (item) => {
         const { row: r, articleId, categoryId, title, summary, slug, valueScore, priorityTier, geoRegion } = item;
@@ -941,7 +945,8 @@ export async function syncTieredFeedsToNeonDb(tier: 1 | 2 | 3): Promise<{ insert
   const inserted = await insertWireArticles(wireNews);
   let promoted = 0;
   try {
-    ({ promoted } = await autoPromoteFreshWireItems(tier === 1 ? 4 : 2));
+    const maxPromote = tier === 1 ? 2 : 1;
+    ({ promoted } = await autoPromoteFreshWireItems(tier === 1 ? 2 : 1, maxPromote));
     if (promoted > 0) {
       await revalidateEdge();
     }
@@ -967,7 +972,7 @@ export async function syncWireFeedsToNeonDb(): Promise<{ inserted: number; total
 
   let promoted = 0;
   try {
-    const promoResult = await autoPromoteFreshWireItems(3);
+    const promoResult = await autoPromoteFreshWireItems(2, 3);
     promoted = promoResult.promoted;
     console.log(`[Wire] Auto-promoted ${promoted} fresh articles across categories:`, promoResult.byCategory);
     if (promoted > 0) {

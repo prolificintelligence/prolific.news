@@ -2,6 +2,8 @@ import { Inngest } from 'inngest';
 import {
   ingestFeedsToNeonDb,
   promoteAndRevalidateWireItems,
+  syncWireFeedsToNeonDb,
+  syncTieredFeedsToNeonDb,
   archiveOldContent,
 } from './wire-puller';
 import { autoSyndicateHighValueArticles } from './social-distributor';
@@ -15,14 +17,13 @@ export { dispatchToPlatform } from './social-channels';
 export const inngest = new Inngest({ id: 'prolific-news-platform' });
 
 /**
- * Full Wire Ingestion (chunked into bounded steps so heavy runs never hit 60s function timeouts)
+ * Full Wire Ingestion (All 12 desks - on-demand or weekly full sweep)
  */
 export const wireIngestCron = inngest.createFunction(
   { id: 'cron-wire-ingest', concurrency: { limit: 1 }, retries: 1 },
   { event: 'wire/full.requested' },
   async ({ event, step }) => {
-    const ingest = await step.run('ingest-feeds', () => ingestFeedsToNeonDb());
-    const promo = await step.run('promote-and-revalidate', () => promoteAndRevalidateWireItems(3));
+    const sync = await step.run('sync-full-news', () => syncWireFeedsToNeonDb());
     const social =
       event.data?.social === false
         ? null
@@ -30,24 +31,24 @@ export const wireIngestCron = inngest.createFunction(
 
     return {
       edition: 'full-cadence',
-      processed: ingest.total,
-      inserted: ingest.inserted,
-      promoted: promo.promoted,
+      processed: sync.total,
+      inserted: sync.inserted,
+      promoted: sync.promoted,
       social,
     };
   }
 );
 
 /**
- * On-Demand Tier 1 Ingestion (Breaking Desk, Politics, Markets, Africa, Asia, LatAm)
- * Scheduled ingestion is consolidated in GitHub Actions and dispatched into durable Inngest steps.
+ * Autonomous Tier 1 Ingestion (Breaking Desk, Politics, Markets, Africa, Asia, LatAm)
+ * Scheduled natively in Inngest Cloud (every 1 hour) with external event dispatch fallback.
+ * Consolidated into a single lean step to minimize Vercel Fluid CPU and eliminate multi-invocation container overhead.
  */
 export const wireIngestTier1Cron = inngest.createFunction(
   { id: 'cron-wire-tier1', concurrency: { limit: 1 }, retries: 1 },
-  { event: 'wire/tier1.requested' },
+  [{ cron: '0 * * * *' }, { event: 'wire/tier1.requested' }],
   async ({ event, step }) => {
-    const ingest = await step.run('ingest-tier1-feeds', () => ingestFeedsToNeonDb(1));
-    const promo = await step.run('promote-and-revalidate-tier1', () => promoteAndRevalidateWireItems(4));
+    const sync = await step.run('sync-tier1-news', () => syncTieredFeedsToNeonDb(1));
     const social =
       event.data?.social === false
         ? null
@@ -55,9 +56,9 @@ export const wireIngestTier1Cron = inngest.createFunction(
 
     return {
       tier: 1,
-      processed: ingest.total,
-      inserted: ingest.inserted,
-      promoted: promo.promoted,
+      processed: sync.total,
+      inserted: sync.inserted,
+      promoted: sync.promoted,
       social,
     };
   }
@@ -76,30 +77,28 @@ export const socialDistributionCron = inngest.createFunction(
 );
 
 /**
- * On-Demand Tier 2 Ingestion (Global, U.S., World, Sports, Entertainment)
+ * Autonomous Tier 2 Ingestion (Global, U.S., World, Sports, Entertainment)
+ * Scheduled natively in Inngest Cloud (every 3 hours at :30).
  */
 export const wireIngestTier2Cron = inngest.createFunction(
   { id: 'cron-wire-tier2', concurrency: { limit: 1 }, retries: 1 },
-  { event: 'wire/tier2.requested' },
+  [{ cron: '30 */3 * * *' }, { event: 'wire/tier2.requested' }],
   async ({ step }) => {
-    const ingest = await step.run('ingest-tier2-feeds', () => ingestFeedsToNeonDb(2));
-    const promo = await step.run('promote-and-revalidate-tier2', () => promoteAndRevalidateWireItems(2));
-
-    return { tier: 2, processed: ingest.total, inserted: ingest.inserted, promoted: promo.promoted };
+    const sync = await step.run('sync-tier2-news', () => syncTieredFeedsToNeonDb(2));
+    return { tier: 2, processed: sync.total, inserted: sync.inserted, promoted: sync.promoted };
   }
 );
 
 /**
- * On-Demand Tier 3 Ingestion (Tech, Science, Opinion, Lifestyle)
+ * Autonomous Tier 3 Ingestion (Tech, Science, Opinion, Lifestyle)
+ * Scheduled natively in Inngest Cloud (every 6 hours at :45).
  */
 export const wireIngestTier3Cron = inngest.createFunction(
   { id: 'cron-wire-tier3', concurrency: { limit: 1 }, retries: 1 },
-  { event: 'wire/tier3.requested' },
+  [{ cron: '45 */6 * * *' }, { event: 'wire/tier3.requested' }],
   async ({ step }) => {
-    const ingest = await step.run('ingest-tier3-feeds', () => ingestFeedsToNeonDb(3));
-    const promo = await step.run('promote-and-revalidate-tier3', () => promoteAndRevalidateWireItems(2));
-
-    return { tier: 3, processed: ingest.total, inserted: ingest.inserted, promoted: promo.promoted };
+    const sync = await step.run('sync-tier3-news', () => syncTieredFeedsToNeonDb(3));
+    return { tier: 3, processed: sync.total, inserted: sync.inserted, promoted: sync.promoted };
   }
 );
 
