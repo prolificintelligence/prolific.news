@@ -12,50 +12,58 @@ import {
   FileText,
   AlertCircle,
   TrendingUp,
+  CreditCard,
+  Lock,
+  ArrowRight,
 } from 'lucide-react';
 
 const PACKAGES = [
   {
     id: 'standard',
     name: 'Standard Wire Publication',
-    price: '$49',
-    badge: 'Fast Turnaround',
+    price: '$79',
+    unitPrice: 79,
+    badge: 'Fast Turnaround • 60 Mins',
     description: 'Guaranteed permanent indexed publication across the Prolific global network and Google News sitemap.',
     features: [
-      'Published on Prolific News within 2 hours',
-      'Included in Google News XML sitemap',
-      'Targeted desk categorization (Tech, Markets, etc.)',
-      'DoFollow canonical attribution backlinks',
-      'Permanent hosted URL with zero recurring fees',
+      'Published on Prolific News within 60 minutes',
+      'Included in live Google News XML sitemap',
+      'Targeted desk categorization (Tech, Markets, Africa, etc.)',
+      'Permanent canonical link with Google-compliant rel="sponsored" attribution',
+      'Instant syndication to Telegram (@prolificnews) & Bluesky feeds',
+      'Zero recurring maintenance or renewal fees',
     ],
   },
   {
     id: 'priority',
-    name: 'Priority Social Syndication',
-    price: '$99',
-    badge: 'Most Popular',
+    name: 'Priority Executive Spotlight',
+    price: '$149',
+    unitPrice: 149,
+    badge: 'Most Popular • Maximum Impact',
     featured: true,
-    description: 'Maximum reach with automated syndication across official Telegram, Bluesky, and Mastodon broadcast feeds.',
+    description: 'Maximum reach with automated syndication across X, Bluesky, Telegram, and 24-hour lead story positioning.',
     features: [
-      'All Standard Wire Publication features',
-      '24-Hour Regional Lead Hero placement',
-      'Automated dispatch to Telegram (@prolificnews)',
-      'Automated syndication to Bluesky & Mastodon',
-      'First-party visitor & impression telemetry report',
+      'All Standard Wire Publication features with 30-minute review',
+      '24-Hour Regional Lead Hero placement on desk front page',
+      'Dedicated sponsor mention in Daily Morning Intelligence Briefing',
+      'Amplified syndication across X, Telegram, Bluesky & Discord',
+      'First-party reader dwell time & verified impression telemetry report',
+      'Permanent Executive Corporate Dispatch editorial disclosure',
     ],
   },
   {
-    id: 'executive',
-    name: 'Executive Partner Briefing',
-    price: '$149',
-    badge: 'Maximum Impact',
-    description: 'Featured headline slot inside the Prolific Morning Intelligence Email Digest delivered directly to subscribers.',
+    id: 'agency',
+    name: 'Agency 5-Release Retainer Pack',
+    price: '$399',
+    unitPrice: 399,
+    badge: 'Best Value For PR Agencies',
+    description: 'Prepaid 5-release bundle ($79.80/release vs $149 retail). Ideal for boutique PR firms and multi-brand founders.',
     features: [
-      'All Priority Social Syndication features',
-      'Featured Sponsor Slot in Daily Morning Email Digest',
-      'Permanent Executive Dispatch editorial badge',
-      'Dedicated social media amplification thread',
-      'Priority editorial desk review within 30 minutes',
+      '5 Priority Executive Spotlight wire releases ($745 total retail value)',
+      'Credits never expire; stage on demand via self-serve portal',
+      'Direct WhatsApp & email priority editorial line with wire editor',
+      'Guaranteed 30-minute SLA from submission to live Google News indexing',
+      'White-label monthly syndication & telemetry proof report for clients',
     ],
   },
 ];
@@ -71,7 +79,11 @@ export default function SubmitPressReleasePage() {
   const [mediaUrl, setMediaUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const selectedTier = PACKAGES.find((p) => p.id === selectedPackage) || PACKAGES[1];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,9 +108,11 @@ export default function SubmitPressReleasePage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
+        setSubmissionId(data.submissionId);
+        setPaymentUrl(data.paymentUrl || null);
         setSubmitted(true);
       } else {
-        setErrorMsg(data.error || 'Failed to submit press release. Please try again.');
+        setErrorMsg(data.error || 'Failed to submit press release. Please check fields and try again.');
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Network error during submission.');
@@ -114,13 +128,13 @@ export default function SubmitPressReleasePage() {
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-[#CC0000] text-white font-headline font-bold text-xs uppercase px-3 py-1 rounded tracking-wider">
             <Radio className="w-3.5 h-3.5 text-[#FFCC00]" />
-            Self-Service Commercial Wire Submission
+            Commercial Press Wire & Rapid-Indexing Desk
           </div>
           <h1 className="font-headline font-black text-3xl md:text-5xl uppercase tracking-tight text-white leading-tight">
-            Distribute Your News Across <span className="text-[#FFCC00]">Global Desks</span>
+            Publish Corporate Dispatches Directly Into <span className="text-[#FFCC00]">Google News</span>
           </h1>
           <p className="text-gray-300 text-base md:text-lg font-serif">
-            Publish your company announcements, funding rounds, regulatory dispatches, and product launches to global decision-makers, financial analysts, and regional news audiences.
+            Guaranteed indexed publishing across 12 global bureaus, automated social push distribution, and Google-compliant canonical attribution. Built for startups, boutique PR agencies, and fast-moving enterprises.
           </p>
         </div>
 
@@ -152,7 +166,9 @@ export default function SubmitPressReleasePage() {
                 </h3>
                 <div className="flex items-baseline gap-1">
                   <span className="font-headline font-black text-3xl text-[#FFCC00]">{pkg.price}</span>
-                  <span className="text-xs text-gray-400">/ release</span>
+                  <span className="text-xs text-gray-400">
+                    {pkg.id === 'agency' ? 'for 5 releases' : '/ release'}
+                  </span>
                 </div>
                 <p className="text-xs text-gray-300 leading-relaxed">{pkg.description}</p>
               </div>
@@ -168,7 +184,7 @@ export default function SubmitPressReleasePage() {
 
               <div className="mt-6">
                 <div
-                  className={`w-full py-2.5 text-center text-xs font-headline font-bold uppercase rounded tracking-wider ${
+                  className={`w-full py-2.5 text-center text-xs font-headline font-bold uppercase rounded tracking-wider transition ${
                     selectedPackage === pkg.id
                       ? 'bg-[#FFCC00] text-[#002B49]'
                       : 'bg-white/10 text-white'
@@ -181,22 +197,74 @@ export default function SubmitPressReleasePage() {
           ))}
         </div>
 
+        {/* Editorial Compliance Callout */}
+        <div className="bg-[#001D33] border border-blue-500/30 rounded-lg p-4 flex items-start gap-3 text-xs text-gray-300">
+          <ShieldCheck className="w-5 h-5 text-[#FFCC00] shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-bold text-white uppercase tracking-wider block">
+              Google News Guidelines & Anti-Spam Compliance
+            </span>
+            <p className="leading-relaxed">
+              Prolific News Network strictly adheres to Google Search Central's Link Spam Guidelines. All commercial hyperlinks are published with <code className="bg-black/40 px-1 py-0.5 rounded text-[#FFCC00] font-mono">rel="sponsored nofollow"</code>. Promotional gambling/casinos, unregulated cryptocurrency presales, adult content, and pharmaceutical submissions are strictly prohibited and automatically rejected.
+            </p>
+          </div>
+        </div>
+
         {/* Submission Form or Success Message */}
         {submitted ? (
-          <div className="bg-[#00233D] border border-emerald-500/50 rounded-xl p-8 md:p-12 text-center space-y-4 max-w-2xl mx-auto shadow-2xl">
+          <div className="bg-[#00233D] border border-emerald-500/50 rounded-xl p-8 md:p-12 text-center space-y-5 max-w-2xl mx-auto shadow-2xl">
             <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-10 h-10" />
             </div>
             <h2 className="font-headline font-black text-2xl uppercase tracking-wide text-white">
-              Press Release Submitted Successfully
+              Commercial Wire Dispatch Filed Successfully
             </h2>
             <p className="text-sm text-gray-300 leading-relaxed">
-              Your press release has been received by the editorial desk. An invoice and tracking receipt have been dispatched to <strong className="text-white">{contactEmail}</strong>. Standard review and indexation will complete within your selected tier window.
+              Your submission <strong className="text-[#FFCC00]">({submissionId})</strong> has been staged for priority review. A copy of your filing receipt and billing confirmation have been dispatched to <strong className="text-white">{contactEmail}</strong>.
             </p>
-            <div className="pt-4">
+
+            <div className="bg-[#001A2C] border border-gray-700 rounded-lg p-5 text-left text-xs space-y-2">
+              <div className="flex justify-between border-b border-gray-800 pb-2">
+                <span className="text-gray-400">Package:</span>
+                <span className="font-bold text-white uppercase">{selectedTier.name} ({selectedTier.price})</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-800 pb-2">
+                <span className="text-gray-400">Headline:</span>
+                <span className="font-bold text-white truncate max-w-xs">{headline}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Turnaround SLA:</span>
+                <span className="font-bold text-emerald-400">
+                  {selectedPackage === 'priority' || selectedPackage === 'agency' ? '30 Minutes' : '60 Minutes'}
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              {paymentUrl ? (
+                <a
+                  href={paymentUrl}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#FFCC00] text-[#002B49] font-headline font-black text-xs uppercase px-8 py-3.5 rounded tracking-wider hover:bg-amber-400 transition shadow-lg"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Complete Secure Payment ({selectedTier.price})</span>
+                </a>
+              ) : (
+                <a
+                  href={`mailto:wire@prolific.news?subject=${encodeURIComponent(
+                    `Commercial Wire Payment Confirmation: ${submissionId}`
+                  )}&body=${encodeURIComponent(
+                    `Hello Wire Desk,\n\nI have filed submission ${submissionId} for ${selectedTier.name} (${selectedTier.price}). Please send invoice / payment settlement details.\n\nThank you.`
+                  )}`}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#FFCC00] text-[#002B49] font-headline font-black text-xs uppercase px-8 py-3.5 rounded tracking-wider hover:bg-amber-400 transition shadow-lg"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Inquire Wire Desk Invoicing</span>
+                </a>
+              )}
               <Link
                 href="/"
-                className="inline-block bg-[#FFCC00] text-[#002B49] font-headline font-black text-xs uppercase px-6 py-3 rounded tracking-wider hover:bg-amber-400 transition"
+                className="w-full sm:w-auto inline-block bg-white/10 text-white font-headline font-bold text-xs uppercase px-6 py-3.5 rounded tracking-wider hover:bg-white/20 transition"
               >
                 Return to Network Wire
               </Link>
@@ -213,9 +281,9 @@ export default function SubmitPressReleasePage() {
                 Press Release Details & Editorial Filing
               </h2>
               <p className="text-xs text-gray-400 mt-1">
-                Selected Package:{' '}
+                Selected Tier:{' '}
                 <strong className="text-[#FFCC00]">
-                  {PACKAGES.find((p) => p.id === selectedPackage)?.name} ({PACKAGES.find((p) => p.id === selectedPackage)?.price})
+                  {selectedTier.name} ({selectedTier.price})
                 </strong>
               </p>
             </div>
@@ -307,9 +375,14 @@ export default function SubmitPressReleasePage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                Full Press Release Body *
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                  Full Press Release Body (Minimum 200 Words) *
+                </label>
+                <span className="text-[11px] text-gray-400 font-mono">
+                  {content.trim() ? `${content.trim().split(/\s+/).length} words` : '0 words'}
+                </span>
+              </div>
               <textarea
                 required
                 rows={8}
@@ -343,7 +416,7 @@ export default function SubmitPressReleasePage() {
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  <span>Submit Press Release & Reserve Slot</span>
+                  <span>Submit Wire Release & Review Slot ({selectedTier.price})</span>
                 </>
               )}
             </button>

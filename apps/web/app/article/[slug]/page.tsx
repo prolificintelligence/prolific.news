@@ -95,6 +95,22 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     .replace(/\s+/g, ' ')
     .trim();
 
+  const isSponsored = Boolean(
+    article.tags?.some((t: string) => /sponsored|commercial wire|press release/i.test(t)) ||
+      article.author?.name?.toLowerCase().includes('sponsored') ||
+      article.subtitle?.toLowerCase().includes('sponsored wire')
+  );
+
+  const renderedContent = isSponsored
+    ? (article.content || '').replace(
+        /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1([^>]*)>/gi,
+        (match, quote, href, rest) => {
+          if (href.startsWith('#') || href.startsWith('/')) return match;
+          return `<a href="${href}" target="_blank" rel="sponsored nofollow"${rest}>`;
+        }
+      )
+    : article.content;
+
   const jsonLd = [
     {
       '@context': 'https://schema.org',
@@ -266,10 +282,25 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </div>
           )}
 
+          {/* Sponsored Corporate Dispatch Disclosure Banner */}
+          {isSponsored && (
+            <div className="bg-amber-50 border-l-4 border-amber-600 p-3.5 rounded-r flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-950 font-sans shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-600"></span>
+                <span className="font-bold uppercase tracking-wider">
+                  Sponsored Corporate Dispatch • Verified by PNN Commercial Desk
+                </span>
+              </div>
+              <span className="text-[10px] font-mono bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded font-bold uppercase tracking-wider w-fit">
+                Commercial Wire
+              </span>
+            </div>
+          )}
+
           {/* Article Text Content */}
           <div
             className="font-serif text-gray-800 text-lg leading-relaxed space-y-5 pt-4"
-            dangerouslySetInnerHTML={{ __html: article.content }}
+            dangerouslySetInnerHTML={{ __html: renderedContent }}
           />
 
           {/* Official Social Handles Callout */}

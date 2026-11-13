@@ -239,9 +239,8 @@ gtag('js', new Date());`,
                 <li><Link href="/for-you" className="hover:text-white transition">For You (Personalized Digest)</Link></li>
                 <li><Link href="/search" className="hover:text-white transition">Search News Index</Link></li>
                 <li><Link href="/archive" className="hover:text-white transition">Newsroom Archive</Link></li>
-                <li><Link href="/plus" className="hover:text-white transition">Prolific Plus (Ad-Free)</Link></li>
-                <li><Link href="/submit-press-release" className="hover:text-white transition text-[#FFCC00] font-semibold">Submit Press Release ($49)</Link></li>
-                <li><Link href="/advertise" className="hover:text-white transition text-[#FFCC00] font-semibold">Advertise & Media Kit</Link></li>
+                <li><Link href="/submit-press-release" className="hover:text-white transition text-[#FFCC00] font-semibold">Submit Commercial Wire ($79)</Link></li>
+                <li><Link href="/advertise" className="hover:text-white transition text-[#FFCC00] font-semibold">Desk Sponsorships ($350/mo)</Link></li>
               </ul>
             </div>
 

@@ -70,13 +70,13 @@ export function TopHeader() {
             <span className="hidden sm:inline">Watch Live 24/7</span>
           </Link>
 
-          {/* Prolific Plus Subscription Link */}
+          {/* Desk Underwriting Link */}
           <Link
-            href="/plus"
-            className="hidden sm:flex items-center gap-1.5 bg-[#FFCC00] hover:bg-[#E6B800] text-[#002B49] px-3 py-1.5 rounded font-headline font-black text-xs tracking-wider uppercase transition"
+            href="/advertise"
+            className="hidden sm:flex items-center gap-1.5 bg-[#FFCC00] hover:bg-[#E6B800] text-[#002B49] px-3 py-1.5 rounded font-headline font-black text-xs tracking-wider uppercase transition shadow-sm"
           >
-            <Flame className="w-3.5 h-3.5 fill-[#002B49]" />
-            <span>Prolific Plus</span>
+            <Sparkles className="w-3.5 h-3.5 fill-[#002B49]" />
+            <span>Sponsor Desks</span>
           </Link>
 
           {/* Submit Press Release Link */}

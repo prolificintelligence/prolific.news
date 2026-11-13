@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Play, Flame, CheckCircle2, Share2, Globe } from 'lucide-react';
+import { Play, Flame, CheckCircle2, Share2, Globe, Radio } from 'lucide-react';
 import { Article, VideoClip } from '@prolific/types';
 import { trackTelemetryEvent } from './TelemetryTracker';
 
@@ -316,20 +316,23 @@ export function ThreeColumnLayout({ wireArticles, centerArticles, videoClips }: 
             </div>
           </div>
 
-          {/* Prolific Plus Banner Widget */}
+          {/* Rapid-Index Press Wire Widget */}
           <div className="bg-gradient-to-br from-[#001A2C] to-[#003366] text-white p-4 rounded shadow border border-[#FFCC00]/30 space-y-2">
-            <div className="flex items-center gap-1.5 text-[#FFCC00] font-headline font-black text-sm uppercase">
-              <Flame className="w-4 h-4 fill-[#FFCC00]" />
-              <span>Prolific Plus Exclusive</span>
+            <div className="flex items-center gap-1.5 text-[#FFCC00] font-headline font-black text-xs uppercase tracking-wider">
+              <Radio className="w-3.5 h-3.5 text-[#FFCC00]" />
+              <span>Commercial Press Wire</span>
             </div>
-            <p className="font-headline font-bold text-xs uppercase leading-tight">
-              Watch uncensored documentaries, executive briefings, and live commercial-free feeds.
+            <p className="font-headline font-black text-sm uppercase leading-tight text-white">
+              Publish Your Company News Directly Into Google News Feeds
+            </p>
+            <p className="text-[11px] text-gray-300 leading-snug">
+              Guaranteed publication within 60 minutes across 12 global desks with permanent canonical indexing.
             </p>
             <Link
-              href="/plus"
-              className="inline-block bg-[#FFCC00] hover:bg-[#E6B800] text-[#002B49] font-headline font-black text-[11px] uppercase tracking-wider px-3 py-1.5 rounded transition mt-2"
+              href="/submit-press-release"
+              className="inline-block bg-[#FFCC00] hover:bg-[#E6B800] text-[#002B49] font-headline font-black text-[11px] uppercase tracking-wider px-3 py-1.5 rounded transition mt-1 shadow"
             >
-              Explore Prolific Plus
+              Submit Press Release ($79)
             </Link>
           </div>
 
